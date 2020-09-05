@@ -25,11 +25,11 @@ function atomTime=getUTC(debug_test)
 % """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 % note #1: web method doesn't work
 %
-% Version: 1.0
-% Date:    2020-05-20
+% Version: 1.0.2
+% Date:    2020-09-05
 % Author:  H.J. Wisselink
 % Licence: CC by-nc-sa 4.0 ( creativecommons.org/licenses/by-nc-sa/4.0 )
-% Email=  'h_j_wisselink*alumnus_utwente_nl';
+% Email = 'h_j_wisselink*alumnus_utwente_nl';
 % Real_email = regexprep(Email,{'*','_'},{'@','.'})
 
 if nargin==0
@@ -103,8 +103,11 @@ catch
         end
         fclose(fid);
     end
-    mex('utc_time.c');
-    delete('utc_time.c')%cleanup
+    try
+        mex('utc_time.c');
+    catch
+    end
+    if exist('utc_time.c','file'),delete('utc_time.c'),end%cleanup
     if exist('utc_time.o','file'),delete('utc_time.o'),end%cleanup on Octave
     if exist(['utc_time.' mexext],'file')
         UTC_epoch_seconds=utc_time;
@@ -163,8 +166,8 @@ function [connected,timing]=isnetavl
 % Version: 1.2.2
 % Date:    2020-07-06
 % Author:  H.J. Wisselink
-% Licence: CC by-nc-sa 4.0 ( http://creativecommons.org/licenses/by-nc-sa/4.0 )
-% Email=  'h_j_wisselink*alumnus_utwente_nl';
+% Licence: CC by-nc-sa 4.0 ( https://creativecommons.org/licenses/by-nc-sa/4.0 )
+% Email = 'h_j_wisselink*alumnus_utwente_nl';
 % Real_email = regexprep(Email,{'*','_'},{'@','.'})
 
 tf=isnetavl__ICMP_is_blocked;
