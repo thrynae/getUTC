@@ -6,7 +6,8 @@ function atomTime=getUTC(debug_test)
 %
 % There are two methods implemented in this function:
 % - An implementation that requires a C mex function.
-%   This method requires write access to the current folder and a working C compiler.
+%   This method requires write access to a subdirectory of the tempdir (or the current folder) and
+%   a working C compiler.
 %   (you may want to compile the mex function to the same folder you store this m-file)
 % - An implementation using https://www.utctime.net/utc-timestamp. The NIST has a server that
 %   returns the time, but it currently blocks API access.
@@ -15,7 +16,7 @@ function atomTime=getUTC(debug_test)
 %  _______________________________________________________________________
 % | Compatibility | Windows 10  | Ubuntu 20.04 LTS | MacOS 10.15 Catalina |
 % |---------------|-------------|------------------|----------------------|
-% | ML R2020a     |  works      |  not tested      |  not tested          |
+% | ML R2020b     |  works      |  not tested      |  not tested          |
 % | ML R2018a     |  works      |  works           |  not tested          |
 % | ML R2015a     |  works      |  works           |  not tested          |
 % | ML R2011a     |  partial #1 |  partial #1      |  not tested          |
@@ -25,8 +26,8 @@ function atomTime=getUTC(debug_test)
 % """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 % note #1: web method doesn't work
 %
-% Version: 1.0.2
-% Date:    2020-09-05
+% Version: 1.1.0
+% Date:    2020-10-29
 % Author:  H.J. Wisselink
 % Licence: CC by-nc-sa 4.0 ( creativecommons.org/licenses/by-nc-sa/4.0 )
 % Email = 'h_j_wisselink*alumnus_utwente_nl';
@@ -55,11 +56,32 @@ UTC_offset=UTC_epoch_seconds/(24*60*60);
 atomTime=UTC_offset+datenum(1970,1,1);
 end
 function UTC_epoch_seconds=getUTC_c
-%Use a C implementation, which requires write permission in the current directory.
+%Use a C implementation, which requires write permission in the tempdir or the current directory.
 %Should return an empty array instead of an error if it fails.
 
-persistent utc_time_c
+persistent utc_time_c tempdir_f funname utc_time_fun_handle Compile_attempts_remaining
 if isempty(utc_time_c)
+    funname=['utc_time_' mymexext];
+    funname=strrep(funname,['.' mexext],'');
+    try utc_time_fun_handle=str2func(funname);catch,end %The try-catch required in Octave.
+    
+    %Try creating a folder in the tempdir and adding it to the path (if it is not already in
+    %there). If the folder is not writeable, the current folder will be used.
+    %In some release-runtime combinations addpath has a permanent effect, in others it doesn't. By
+    %putting this code in this block, we are trying to keep these queries to a minimum.
+    tempdir_f=fullfile(tempdir,'MATLAB','FileExchange','getUTC');
+    try
+        if isempty(strfind([path ';'],[tempdir_f ';'])) %#ok<STREMP> f is not on the path
+            if ~exist(tempdir_f,'dir'),mkdir(tempdir_f),end
+            addpath(tempdir_f,'-end')
+        end
+    catch
+    end
+    
+    %Only allow a few compilation attempts, so this function doesn't cause a lot of disk I/O if
+    %there is no working compiler.
+    Compile_attempts_remaining=5;
+    
     %prepare to write this to a file and compile
     utc_time_c={'#include "mex.h"'
         '#include "time.h"'
@@ -89,28 +111,48 @@ if isempty(utc_time_c)
 end
 
 try
-    UTC_epoch_seconds=utc_time;
+    UTC_epoch_seconds=feval(utc_time_fun_handle);
 catch
-    %build missing C file
-    if exist(['utc_time.' mexext],'file')
+    if exist(['utc_time.' mymexext],'file')
         ME=lasterror; %#ok<LERR>
         rethrow(ME);
     end
-    if ~exist('utc_time.c','file')
-        fid=fopen('utc_time.c','w');
-        for line=1:numel(utc_time_c)
-            fprintf(fid,'%s\n',utc_time_c{line});
-        end
-        fclose(fid);
+    
+    %Try building missing C file
+    Compile_attempts_remaining=Compile_attempts_remaining-1;
+    if Compile_attempts_remaining<0 % Don't endlessly try to compile.
+        UTC_epoch_seconds=[];return
     end
+    
+    if TestFolderWritePermission(tempdir_f)
+        f=tempdir_f; %Use the folder in the tempdir to store the mex.
+    else
+        f=pwd; %Revert to current folder.
+    end
+    current_folder=cd(f);
     try
-        mex('utc_time.c');
+        if ~exist(fullfile(f,[funname '.c']),'file')
+            fid=fopen(fullfile(f,[funname '.c']),'w');
+            for line=1:numel(utc_time_c)
+                fprintf(fid,'%s\n',utc_time_c{line});
+            end
+            fclose(fid);
+        end
+        
+        try
+            mex([funname '.c']);
+        catch
+        end
+        %cleanup
+        for ext={'c','o'}
+            file=fullfile(f,[funname '.' ext{1}]);if exist(file,'file'),delete(file),end
+        end
     catch
     end
-    if exist('utc_time.c','file'),delete('utc_time.c'),end%cleanup
-    if exist('utc_time.o','file'),delete('utc_time.o'),end%cleanup on Octave
-    if exist(['utc_time.' mexext],'file')
-        UTC_epoch_seconds=utc_time;
+    cd(current_folder);
+    if exist([funname '.' mexext],'file')
+        utc_time_fun_handle=str2func(funname);%refresh handle
+        UTC_epoch_seconds=feval(utc_time_fun_handle);
     else
         %the compiling of the mex function failed
         UTC_epoch_seconds=[];
@@ -154,7 +196,7 @@ function [connected,timing]=isnetavl
 %  _______________________________________________________________________
 % | Compatibility | Windows 10  | Ubuntu 20.04 LTS | MacOS 10.15 Catalina |
 % |---------------|-------------|------------------|----------------------|
-% | ML R2020a     |  works      |  not tested      |  not tested          |
+% | ML R2020b     |  works      |  not tested      |  not tested          |
 % | ML R2018a     |  works      |  works           |  not tested          |
 % | ML R2015a     |  works      |  works           |  not tested          |
 % | ML R2011a     |  works      |  works           |  not tested          |
@@ -281,4 +323,67 @@ end
 %Both methods failed, internet is down. Leave the value of tf (and the persistent variable) set to
 %empty so it is tried next time.
 tf=[];
+end
+function ext=mymexext
+v=version;ind=strfind(v,'.');v(ind(2):end)='';v=['v' strrep(v,'.','_')];
+if ~exist('OCTAVE_VERSION', 'builtin')
+    type=computer;
+else
+    arch=computer;arch=arch(1:(strfind(arch,'-')-1));
+    if ispc
+        if strcmp(arch,'x86_64')  ,type= 'win_64';
+        elseif strcmp(arch,'i686'),type= 'win_i686';
+        elseif strcmp(arch,'x86') ,type= 'win_x86';
+        else                      ,type=['win_' arch];
+        end
+    elseif isunix && ~ismac %essentially this is islinux
+        if strcmp(arch,'i686')      ,type= 'lnx_i686';
+        elseif strcmp(arch,'x86_64'),type= 'lnx_64';
+        else                        ,type=['lnx_' arch];
+        end
+    elseif ismac
+        if strcmp(arch,'x86_64'),type= 'mac_64';
+        else                    ,type=['mac_' arch];
+        end
+    end
+end
+type=strrep(strrep(type,'.',''),'-','');
+ext=[v '_' type '.' mexext];
+end
+function tf=TestFolderWritePermission(f)
+%returns true if the folder exists and allows Matlab to write files
+%an empty input will generally test the pwd
+%
+%examples:
+%  fn='foo.txt';if ~TestFolderWritePermission(fileparts(fn)),error('can''t write!'),end
+
+%test existance
+if ~( isempty(f) || exist(f,'dir') )
+    tf=false;return
+end
+
+%test write permission
+fn='';
+while isempty(fn) || exist(fn,'file')
+    %generate a random file name, making sure not to overwrite an exisiting file
+    [ignore,fn]=fileparts(tmpname('write_permission_test_','.txt')); %#ok<ASGLU>
+    fn=fullfile(f,fn);
+end
+try
+    fid=fopen(fn,'w');fprintf(fid,'test');fclose(fid);
+    delete(fn);
+    tf=true;
+catch
+    try delete(fn);catch,end
+    tf=false;
+end
+end
+function str=tmpname(StartFilenameWith,ext)
+%Inject a string in the file name part returned by the tempname function.
+if nargin<1,StartFilenameWith='';end
+if ~isempty(StartFilenameWith),StartFilenameWith=[StartFilenameWith '_'];end
+if nargin<2,ext='';else,if ~strcmp(ext(1),'.'),ext=['.' ext];end,end
+str=tempname;
+[p,f]=fileparts(str);
+str=fullfile(p,[StartFilenameWith f ext]);
 end
