@@ -1,0 +1,1644 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>getUTC</title><meta name="generator" content="MATLAB 9.10"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2021-04-27"><meta name="DC.source" content="getUTC.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; }
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+span.typesection { color:#A0522D }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><h1>getUTC</h1><!--introduction--><p><tt style="font-size:0%">Formatted documentation for the getUTC function.</tt>
+<div style="margin-top:-5em;color:grey">Returns the UTC time. The value is in Matlab datenum format.
+</div>
+</p><!--/introduction--><h2>Contents</h2><div><ul><li><a href="#1">Description</a></li><li><a href="#2">Syntax</a></li><li><a href="#3">Output arguments</a></li><li><a href="#4">Input arguments</a></li><li><a href="#5">Compatibility, version info, and licence</a></li><li><a href="#6">Test suite</a></li></ul></div><h2 id="1">Description</h2><p>
+For some applications it is necessary to know the current UTC time. This function will return the
+current UTC time in the <code>datenum</code> format.
+<br>There are several methods implemented in this function:
+<ul>
+   <li>An implementation that requires a C mex function.
+     <br>This method requires write access to a folder and a working C&nbsp;compiler. The
+     compilation result will be stored to a subdirectory of a folder similar to the AddOn path,
+     or the tempdir, or the current folder. Write permission is tested in that order.</li>
+   <li>An implementation using <a href="https://www.utctime.net/utc-timestamp">utctime.net</a>.
+     <br>The NIST has a server that returns the time, but it currently blocks API access.
+     <br>This method requires internet access.
+     <br>This fails for some older releases of Matlab.</li>
+   <li>The local time and timezone offset can be determined with the <code>wmic</code> command
+     (Windows) or the <code>date</code> command (Linux and Mac).
+     <br>To speed up the usage of this method, you can cache the difference with
+     <code>now()</code> in a persistent variable, that way you avoid the need for a slow system
+     call (especially the first call will be slow).</li>
+</ul>
+By default the system call will be tried first, followed by the C implementation, followed by the
+online implementation. By providing an override, you can bypass this order. Note that with the
+override the output will be empty if UTC determination fails, while with normal operation
+<code>getUTC</code> will throw an error.
+</p><h2 id="2">Syntax</h2><pre class="language-matlab">atomTime=getUTC
+atomTime=getUTC(override)
+</pre><h2 id="3">Output arguments</h2><p>
+<table border=1>
+<tr><td>
+atomTime
+</td><td>
+The UTC time in the datenum format.
+</td></tr>
+</table>
+</p><h2 id="4">Input arguments</h2><p>
+<table border=1>
+<tr><td>
+override
+</td><td>
+If you provide an override, this function will no longer return an error, but the output will be
+empty instead.
+<br>You can force the use of the C implementation by providing 1 as override value, or 2 for the
+web version, or 3 for the system call. Any other value will trigger an error.
+</td></tr>
+</table>
+</p><h2 id="5">Compatibility, version info, and licence</h2><p>
+Compatibility considerations:
+<ul>
+   <li>Some older releases don't support the web implementation.</li>
+   <li>The normal system call hangs on ML7.1 on XP. Since ML6.5 works fine on Windows 10, it
+     seems reasonable to assume that the OS is the cause of the hang. For XP (and older) there is
+     an alternative strategy in place, but this has a higher likelyhood to fail.</li>
+</ul>
+</p><p>
+<table>
+<tr>
+<td> Test suite result </td>
+<td style="border:2px solid black;"> Windows XP/7/10 </td>
+<td style="border:2px solid black;"> Ubuntu 20.04 LTS </td>
+<td style="border:2px solid black;"> MacOS 10.15 Catalina </td>
+</tr>
+<tr>
+<td style="border:2px solid black;"> Matlab R2021a </td>
+<td> <it>W10 : Pass</it> </td>
+<td> <it></it> </td>
+<td> <it></it> </td>
+</tr>
+<tr>
+<td style="border:2px solid black;"> Matlab R2020a </td>
+<td> <it>W10 : Pass</it> </td>
+<td> <it></it> </td>
+<td> <it></it> </td>
+</tr>
+<tr>
+<td style="border:2px solid black;"> Matlab R2018a </td>
+<td> <it>W10 : Pass</it> </td>
+<td> <it>Pass</it> </td>
+<td> <it></it> </td>
+</tr>
+<tr>
+<td style="border:2px solid black;"> Matlab R2015a </td>
+<td> <it>W10 : Pass</it> </td>
+<td> <it>Pass</it> </td>
+<td> <it></it> </td>
+</tr>
+<tr>
+<td style="border:2px solid black;"> Matlab R2011a </td>
+<td> <it>W10 : Partial</it> </td>
+<td> <it>Partial</it> </td>
+<td> <it></it> </td>
+</tr>
+<tr>
+<td style="border:2px solid black;"> Matlab R2010b </td>
+<td> <it></it> </td>
+<td> <it>Partial</it> </td>
+<td> <it></it> </td>
+</tr>
+<tr>
+<td style="border:2px solid black;"> Matlab R2010a </td>
+<td> <it>W7 : Partial</it> </td>
+<td> <it></it> </td>
+<td> <it></it> </td>
+</tr>
+<tr>
+<td style="border:2px solid black;"> Matlab R2007b </td>
+<td> <it>W10 : Partial</it> </td>
+<td> <it></it> </td>
+<td> <it></it> </td>
+</tr>
+<tr>
+<td style="border:2px solid black;"> Matlab 7.1 (R14SP3) </td>
+<td> <it>XP : Partial</it> </td>
+<td> <it></it> </td>
+<td> <it></it> </td>
+</tr>
+<tr>
+<td style="border:2px solid black;"> Matlab 6.5 (R13) </td>
+<td> <it>W10 : Partial</it> </td>
+<td> <it></it> </td>
+<td> <it></it> </td>
+</tr>
+<tr>
+<td style="border:2px solid black;"> Octave 6.2.0 </td>
+<td> <it>W10 : Pass</it> </td>
+<td> <it></it> </td>
+<td> <it></it> </td>
+</tr>
+<tr>
+<td style="border:2px solid black;"> Octave 5.2.0 </td>
+<td> <it>W10 : Pass</it> </td>
+<td> <it>Pass</it> </td>
+<td> <it></it> </td>
+</tr>
+<tr>
+<td style="border:2px solid black;"> Octave 4.4.1 </td>
+<td> <it>W10 : Pass</it> </td>
+<td> <it></it> </td>
+<td> <it>Pass</it> </td>
+</tr>
+</table>
+</p><pre>Version: 2.0.0
+Date:    2021-04-27
+Author:  H.J. Wisselink
+Licence: CC by-nc-sa 4.0 ( https://creativecommons.org/licenses/by-nc-sa/4.0 )
+Email = 'h_j_wisselink*alumnus_utwente_nl';
+Real_email = regexprep(Email,{'*','_'},{'@','.'})</pre><h2 id="6">Test suite</h2><p>This tester is included so you can test if your own modifications would introduce any bugs. These tests form the basis for the compatibility table above.</p><p>To save space, the tester function below doesn't contain any comments. The full tester function (including all comments) can be found <a href="https://web.archive.org/web/20210427123307/https://cdn-104.anonfiles.com/N3z4v2t3ud/fda295fe-1619527373/aaa___getUTC___test.m">here</a>.</p><pre class="codeinput"><span class="comment">% Test function for getUTC (an error for ML6.5 and R2011a web is expected)</span>
+<span class="comment">%</span>
+<span class="comment">% Pass:    passes all tests, failures for C method when no compiler is present</span>
+<span class="comment">% Partial: web method fails (only when expected)</span>
+<span class="comment">% Fail:    unexpected failures</span>
+<span class="comment">%</span>
+<span class="keyword">function</span> pass_part_fail=aaa___getUTC___test(varargin)
+pass_part_fail=<span class="string">'pass'</span>;
+getUTC(1);
+t1=now;
+C=getUTC(1);
+t1=(now-t1)*60*60*24;t2=now;
+web=getUTC(2);
+t2=(now-t2)*60*60*24;t3=now;
+cmd=getUTC(3);
+t3=(now-t3)*60*60*24;
+isOctave=exist(<span class="string">'OCTAVE_VERSION'</span>, <span class="string">'builtin'</span>) ~= 0;
+v=version;ind=strfind(v,<span class="string">'.'</span>);v=str2double(v(1:(ind(1)-1)));
+fail=false;
+<span class="keyword">if</span> isempty(C)
+    <span class="keyword">if</span> CheckMexCompilerExistence
+        fprintf(<span class="string">'C function failed\n'</span>)
+        fail=true;
+    <span class="keyword">else</span>
+        fprintf(<span class="string">'C function failed [no compiler found]\n'</span>)
+    <span class="keyword">end</span>
+<span class="keyword">end</span>
+<span class="keyword">if</span> ~isnetavl,web=0;<span class="keyword">end</span>
+<span class="keyword">if</span> isempty(web)
+    <span class="keyword">if</span> ~isOctave &amp;&amp; v&lt;8
+        fprintf(<span class="string">'web function failed as expected\n'</span>)
+        pass_part_fail=<span class="string">'part'</span>;
+    <span class="keyword">else</span>
+        fail=true;fprintf(<span class="string">'web function failed\n'</span>)
+    <span class="keyword">end</span>
+<span class="keyword">elseif</span> ~isOctave &amp;&amp; v&lt;8
+    fail=true;fprintf(<span class="string">'web function did not fail as expected\n'</span>)
+<span class="keyword">end</span>
+<span class="keyword">if</span> isempty(cmd)
+	fail=true;fprintf(<span class="string">'system call failed\n'</span>)
+<span class="keyword">end</span>
+<span class="keyword">if</span> fail
+    <span class="keyword">if</span> nargout&gt;0
+        pass_part_fail=<span class="string">'fail'</span>;<span class="keyword">return</span>
+    <span class="keyword">else</span>
+        error(<span class="string">'test failed'</span>)
+    <span class="keyword">end</span>
+<span class="keyword">else</span>
+    fprintf(<span class="string">'C function took %.2f seconds\n'</span>,t1)
+    fprintf(<span class="string">'web function took %.2f seconds\n'</span>,t2)
+    fprintf(<span class="string">'system call took %.2f seconds\n'</span>,t3)
+    fprintf(<span class="string">'test completed\n'</span>)
+<span class="keyword">end</span>
+<span class="keyword">if</span> nargout==0,clear,<span class="keyword">end</span>
+<span class="keyword">end</span>
+<span class="keyword">function</span> [tf,ME]=CheckMexCompilerExistence
+<span class="keyword">persistent</span> tf_ ME_
+<span class="keyword">if</span> isempty(tf_)
+    <span class="keyword">if</span> ifversion(<span class="string">'&lt;'</span>,0,<span class="string">'Octave'</span>,<span class="string">'&gt;'</span>,0)
+        tf_=true;
+    <span class="keyword">elseif</span> ifversion(<span class="string">'&gt;='</span>,<span class="string">'R2008a'</span>)
+        <span class="keyword">try</span> cc=mex.getCompilerConfigurations;<span class="keyword">catch</span>,cc=[];<span class="keyword">end</span>
+        tf_=~isempty(cc);
+    <span class="keyword">else</span>
+        <span class="keyword">if</span> ispc,ext=<span class="string">'.bat'</span>;<span class="keyword">else</span>,ext=<span class="string">'.sh'</span>;<span class="keyword">end</span>
+        tf_=exist(fullfile(prefdir,[<span class="string">'mexopts'</span> ext]),<span class="string">'file'</span>);
+    <span class="keyword">end</span>
+    msg={ <span class="string">'No selected compiler was found. Please make sure a supported compiler is'</span>,<span class="string">'installed and set up. Run mex(''-setup'') for version-specific documentation.'</span>,<span class="string">''</span>,<span class="string">'Clear persistent variables (with clear(''all'') or clear(''functions''))'</span>,<span class="string">'after running mex(''-setup'') to prevent this error.'</span>};
+    msg=sprintf(<span class="string">'\n%s'</span>,msg{:});msg=msg(2:end);
+    ME_=struct(<span class="string">'identifier'</span>,<span class="string">'HJW:CheckMexCompilerExistence:NoCompiler'</span>,<span class="string">'message'</span>,msg);
+<span class="keyword">end</span>
+tf=tf_;ME=ME_;
+<span class="keyword">end</span>
+<span class="keyword">function</span> atomTime=getUTC(override)
+<span class="keyword">if</span> nargin==0
+    UTC_epoch_seconds=getUTC_cmd;
+    <span class="keyword">if</span> isempty(UTC_epoch_seconds)
+        UTC_epoch_seconds=getUTC_c;
+    <span class="keyword">end</span>
+    <span class="keyword">if</span> isempty(UTC_epoch_seconds)
+        UTC_epoch_seconds=getUTC_web;
+    <span class="keyword">end</span>
+    <span class="keyword">if</span> isempty(UTC_epoch_seconds)
+        error(<span class="string">'HJW:getUTC:TimeReadFailed'</span>,[<span class="string">'All methods of retrieving the UTC timestamp failed.\nEnsure you '</span>,<span class="string">'have write access to the current folder and check your internet connection.'</span>])
+    <span class="keyword">end</span>
+<span class="keyword">else</span>
+    <span class="keyword">if</span> override==1
+        UTC_epoch_seconds=getUTC_c(false);
+    <span class="keyword">elseif</span> override==2
+        UTC_epoch_seconds=getUTC_web;
+    <span class="keyword">elseif</span> override==3
+        UTC_epoch_seconds=getUTC_cmd;
+    <span class="keyword">else</span>
+        error(<span class="string">'non-implemented override'</span>)
+    <span class="keyword">end</span>
+<span class="keyword">end</span>
+UTC_offset=UTC_epoch_seconds/(24*60*60);
+atomTime=UTC_offset+datenum(1970,1,1);
+<span class="keyword">end</span>
+<span class="keyword">function</span> UTC_epoch_seconds=getUTC_c(allow_rethrow)
+<span class="keyword">if</span> nargin==0,allow_rethrow=true;<span class="keyword">end</span>
+<span class="keyword">persistent</span> utc_time_c tempdir_f funname utc_time_fun_handle Compile_attempts_remaining mexfilename
+<span class="keyword">if</span> isempty(utc_time_c)
+    tempdir_f=fullfile(GetWritableFolder,<span class="string">'FileExchange'</span>,<span class="string">'getUTC'</span>);
+    <span class="keyword">try</span>
+        <span class="keyword">if</span> isempty(strfind([path <span class="string">';'</span>],[tempdir_f <span class="string">';'</span>]))
+            <span class="keyword">if</span> ~exist(tempdir_f,<span class="string">'dir'</span>),mkdir(tempdir_f);<span class="keyword">end</span>
+            addpath(tempdir_f,<span class="string">'-end'</span>);
+        <span class="keyword">end</span>
+    <span class="keyword">catch</span>
+    <span class="keyword">end</span>
+    funname=<span class="string">'utc_time'</span>;
+    [mexfilename,funname]=mexname(funname);
+    <span class="keyword">try</span> utc_time_fun_handle=str2func(funname);<span class="keyword">catch</span>,<span class="keyword">end</span>
+    Compile_attempts_remaining=5;
+    utc_time_c={<span class="string">'#include "mex.h"'</span>;
+        <span class="string">'#include "time.h"'</span>;
+        <span class="string">''</span>;
+        <span class="string">'/* Abraham Cohn,  3/17/2005 */'</span>;
+        <span class="string">'/* Philips Medical Systems */'</span>;
+        <span class="string">''</span>;
+        <span class="string">'void mexFunction(int nlhs, mxArray *plhs[], int nrhs,'</span>;
+        <span class="string">'                 const mxArray *prhs[])'</span>;
+        <span class="string">'{'</span>;
+        <span class="string">'  time_t utc;'</span>;
+        <span class="string">'  '</span>;
+        <span class="string">'  if (nlhs &gt; 1) {'</span>;
+        <span class="string">'    mexErrMsgTxt("Too many output arguments");'</span>;
+        <span class="string">'  }'</span>;
+        <span class="string">'  '</span>;
+        <span class="string">'  /* Here is a nice ref: www.cplusplus.com/ref/ctime/time.html */'</span>;
+        <span class="string">'  time(&amp;utc);'</span>;
+        <span class="string">'  /* mexPrintf("UTC time in local zone: %s",ctime(&amp;utc)); */'</span>;
+        <span class="string">'  /* mexPrintf("UTC time in GMT: %s",asctime(gmtime(&amp;utc))); */'</span>;
+        <span class="string">'  '</span>;
+        <span class="string">'  /* Create matrix for the return argument. */'</span>;
+        <span class="string">'  plhs[0] = mxCreateDoubleScalar((double)utc);'</span>;
+        <span class="string">'   '</span>;
+        <span class="string">'}'</span>};
+<span class="keyword">end</span>
+<span class="keyword">try</span>
+    UTC_epoch_seconds=feval(utc_time_fun_handle);
+<span class="keyword">catch</span>
+    <span class="keyword">if</span> exist(mexfilename,<span class="string">'file'</span>)
+        <span class="keyword">if</span> allow_rethrow
+            ME=lasterror;
+            rethrow(ME);
+        <span class="keyword">else</span>
+            UTC_epoch_seconds=[];<span class="keyword">return</span>
+        <span class="keyword">end</span>
+    <span class="keyword">end</span>
+    <span class="keyword">if</span> ~CheckMexCompilerExistence
+        Compile_attempts_remaining=0;
+        UTC_epoch_seconds=[];<span class="keyword">return</span>
+    <span class="keyword">end</span>
+    Compile_attempts_remaining=Compile_attempts_remaining-1;
+    <span class="keyword">if</span> Compile_attempts_remaining&lt;0
+        UTC_epoch_seconds=[];<span class="keyword">return</span>
+    <span class="keyword">end</span>
+    <span class="keyword">if</span> TestFolderWritePermission(tempdir_f)
+        f=tempdir_f;
+    <span class="keyword">else</span>
+        f=pwd;
+    <span class="keyword">end</span>
+    current_folder=cd(f);
+    <span class="keyword">try</span>
+        <span class="keyword">if</span> ~exist(fullfile(f,[funname <span class="string">'.c'</span>]),<span class="string">'file'</span>)
+            fid=fopen(fullfile(f,[funname <span class="string">'.c'</span>]),<span class="string">'w'</span>);
+            <span class="keyword">for</span> line=1:numel(utc_time_c)
+                fprintf(fid,<span class="string">'%s\n'</span>,utc_time_c{line});
+            <span class="keyword">end</span>
+            fclose(fid);
+        <span class="keyword">end</span>
+        <span class="keyword">try</span>
+            mex([funname <span class="string">'.c'</span>]);
+        <span class="keyword">catch</span>
+        <span class="keyword">end</span>
+        <span class="keyword">for</span> ext={<span class="string">'c'</span>,<span class="string">'o'</span>}
+            file=fullfile(f,[funname <span class="string">'.'</span> ext{1}]);<span class="keyword">if</span> exist(file,<span class="string">'file'</span>),delete(file),<span class="keyword">end</span>
+        <span class="keyword">end</span>
+    <span class="keyword">catch</span>
+    <span class="keyword">end</span>
+    cd(current_folder);
+    <span class="keyword">if</span> exist(mexfilename,<span class="string">'file'</span>)
+        utc_time_fun_handle=str2func(funname);
+        UTC_epoch_seconds=getUTC_c(allow_rethrow);
+    <span class="keyword">else</span>
+        UTC_epoch_seconds=[];
+    <span class="keyword">end</span>
+<span class="keyword">end</span>
+<span class="keyword">end</span>
+<span class="keyword">function</span> UTC_epoch_seconds=getUTC_cmd
+<span class="keyword">persistent</span> WinVer
+<span class="keyword">if</span> isempty(WinVer)
+    <span class="keyword">try</span>
+        <span class="keyword">if</span> ~ispc
+            error(<span class="string">'trigger'</span>)
+        <span class="keyword">else</span>
+            [status,str]=system(<span class="string">'systeminfo'</span>);
+            ind1= 1+strfind(str,<span class="string">':'</span>);ind1=ind1(3);
+            ind2=-1+strfind(str,<span class="string">'.'</span>);ind2(ind2&lt;ind1)=[];
+            WinVer=str2double(str(ind1:ind2(1)));
+        <span class="keyword">end</span>
+    <span class="keyword">catch</span>
+        WinVer=NaN;
+    <span class="keyword">end</span>
+<span class="keyword">end</span>
+<span class="keyword">try</span>
+    <span class="keyword">if</span> ispc
+        <span class="keyword">if</span> isnan(WinVer)
+            error(<span class="string">'trigger'</span>)
+        <span class="keyword">elseif</span> WinVer&lt;=5
+            pausetime=1;
+            fn1=[tempname,<span class="string">'.bat'</span>];fn2=[tempname,<span class="string">'.txt'</span>];
+            fid=fopen(fn1,<span class="string">'w'</span>);
+            fprintf(fid,<span class="string">'wmic os get LocalDateTime /value &gt; "%s"\nexit'</span>,fn2);
+            fclose(fid);
+            system([<span class="string">'start /min "" cmd /c "'</span> fn1 <span class="string">'"'</span>]);
+            pause(pausetime)
+            str=fileread(fn2);
+            <span class="keyword">try</span> delete(fn1);<span class="keyword">catch</span>,<span class="keyword">end</span>
+            <span class="keyword">try</span> delete(fn2);<span class="keyword">catch</span>,<span class="keyword">end</span>
+        <span class="keyword">else</span>
+            pausetime=0;
+            [status,str]=system(<span class="string">'wmic os get LocalDateTime /value'</span>);
+        <span class="keyword">end</span>
+        str=str(str&gt;=43 &amp; str&lt;=57);
+        date=mat2cell(str(1:21),1,[4 2 2,2 2 2+1+6]);date=str2double(date);
+        date(5)=date(5)-str2double(str(22:end));
+        date=num2cell(date);
+        UTC_epoch_seconds=(datenum(date{:})-datenum(1970,1,1))*24*60*60;
+        UTC_epoch_seconds=UTC_epoch_seconds+pausetime;
+    <span class="keyword">else</span>
+        [status,str]=system(<span class="string">'date +%s'</span>);
+        UTC_epoch_seconds=str2double(str);
+    <span class="keyword">end</span>
+<span class="keyword">catch</span>
+    UTC_epoch_seconds=[];
+<span class="keyword">end</span>
+<span class="keyword">end</span>
+<span class="keyword">function</span> UTC_epoch_seconds=getUTC_web
+<span class="keyword">persistent</span> UseWebread
+<span class="keyword">if</span> isempty(UseWebread)
+    <span class="keyword">try</span> UseWebread=~isempty(which(func2str(@webread)));<span class="keyword">catch</span>,UseWebread=false;<span class="keyword">end</span>
+<span class="keyword">end</span>
+<span class="keyword">if</span> ~isnetavl,UTC_epoch_seconds=[];<span class="keyword">return</span>,<span class="keyword">end</span>
+<span class="keyword">for</span> tries=1:3
+    <span class="keyword">try</span>
+        <span class="keyword">if</span> UseWebread
+            data=webread(<span class="string">'http://www.utctime.net/utc-timestamp'</span>);
+        <span class="keyword">else</span>
+            data=urlread(<span class="string">'http://www.utctime.net/utc-timestamp'</span>);
+        <span class="keyword">end</span>
+        <span class="keyword">break</span>
+    <span class="keyword">catch</span>
+    <span class="keyword">end</span>
+<span class="keyword">end</span>
+<span class="keyword">try</span>
+    data(data==<span class="string">' '</span>)=<span class="string">''</span>;
+    pat=<span class="string">'vartimestamp='</span>;
+    ind1=strfind(data,pat)+numel(pat);
+    ind2=strfind(data,<span class="string">';'</span>)-1;
+    ind2(ind2&lt;ind1)=[];
+    UTC_epoch_seconds=str2double(data(ind1:ind2(1)));
+<span class="keyword">catch</span>
+    UTC_epoch_seconds=[];
+<span class="keyword">end</span>
+<span class="keyword">end</span>
+<span class="keyword">function</span> [f,status]=GetWritableFolder(varargin)
+[success,options,ME]=GetWritableFolder_parse_inputs(varargin{:});
+<span class="keyword">if</span> ~success
+    rethrow(ME)
+<span class="keyword">else</span>
+    [ForceStatus,ErrorOnNotFound,root_folder_list]=deal(options.ForceStatus,options.ErrorOnNotFound,options.root_folder_list);
+<span class="keyword">end</span>
+root_folder_list{end}=pwd;
+<span class="keyword">if</span> ForceStatus
+    status=ForceStatus;f=fullfile(root_folder_list{status},<span class="string">'PersistentFolder'</span>);
+    <span class="keyword">try</span> <span class="keyword">if</span> ~exist(f,<span class="string">'dir'</span>),mkdir(f);<span class="keyword">end</span>,<span class="keyword">catch</span>,<span class="keyword">end</span>
+    <span class="keyword">return</span>
+<span class="keyword">end</span>
+status=1;f=root_folder_list{status};
+<span class="keyword">try</span> <span class="keyword">if</span> ~exist(f,<span class="string">'dir'</span>),mkdir(f);<span class="keyword">end</span>,<span class="keyword">catch</span>,<span class="keyword">end</span>
+<span class="keyword">if</span> ~TestFolderWritePermission(f)
+    status=2;f=root_folder_list{status};
+    <span class="keyword">try</span> <span class="keyword">if</span> ~exist(f,<span class="string">'dir'</span>),mkdir(f);<span class="keyword">end</span>,<span class="keyword">catch</span>,<span class="keyword">end</span>
+    <span class="keyword">if</span> ~TestFolderWritePermission(f)
+        status=3;f=root_folder_list{status};
+    <span class="keyword">end</span>
+<span class="keyword">end</span>
+f=fullfile(f,<span class="string">'PersistentFolder'</span>);
+<span class="keyword">try</span> <span class="keyword">if</span> ~exist(f,<span class="string">'dir'</span>),mkdir(f);<span class="keyword">end</span>,<span class="keyword">catch</span>,<span class="keyword">end</span>
+<span class="keyword">if</span> ~TestFolderWritePermission(f)
+    <span class="keyword">if</span> ErrorOnNotFound
+        error(<span class="string">'HJW:GetWritableFolder:NoWritableFolder'</span>,<span class="string">'This function was unable to find a folder with write permissions.'</span>)
+    <span class="keyword">else</span>
+        status=0;f=<span class="string">''</span>;
+    <span class="keyword">end</span>
+<span class="keyword">end</span>
+<span class="keyword">end</span>
+<span class="keyword">function</span> [success,options,ME]=GetWritableFolder_parse_inputs(varargin)
+success=false;
+options=struct;
+ME=struct(<span class="string">'identifier'</span>,<span class="string">''</span>,<span class="string">'message'</span>,<span class="string">''</span>);
+<span class="keyword">persistent</span> default
+<span class="keyword">if</span> isempty(default)
+    default.ForceStatus=false;
+    default.ErrorOnNotFound=false;
+    default.root_folder_list={ GetPseudoAddonpath;
+        fullfile(tempdir,<span class="string">'MATLAB'</span>);
+        <span class="string">''</span>};
+<span class="keyword">end</span>
+<span class="keyword">if</span> nargin==2
+    options=default;
+    success=true;
+    <span class="keyword">return</span>
+<span class="keyword">end</span>
+struct_input=       nargin   ==1 &amp;&amp; isa(varargin{1},<span class="string">'struct'</span>);
+NameValue_input=mod(nargin,2)==0 &amp;&amp; all( cellfun(<span class="string">'isclass'</span>,varargin(1:2:end),<span class="string">'char'</span>  ) |cellfun(<span class="string">'isclass'</span>,varargin(1:2:end),<span class="string">'string'</span>)   );
+<span class="keyword">if</span> ~( struct_input || NameValue_input )
+    ME.message=[<span class="string">'The input is expected to be either a struct, '</span>,char(10),<span class="string">'or consist of Name,Value pairs.'</span>];
+    ME.identifier=<span class="string">'HJW:GetWritableFolder:incorrect_input_options'</span>;
+    <span class="keyword">return</span>
+<span class="keyword">end</span>
+<span class="keyword">if</span> NameValue_input
+    <span class="keyword">for</span> n=1:2:numel(varargin)
+        <span class="keyword">try</span>
+            options.(varargin{n})=varargin{n+1};
+        <span class="keyword">catch</span>
+            ME.message=<span class="string">'Parsing of Name,Value pairs failed.'</span>;
+            ME.identifier=<span class="string">'HJW:GetWritableFolder:incorrect_input_NameValue'</span>;
+            <span class="keyword">return</span>
+        <span class="keyword">end</span>
+    <span class="keyword">end</span>
+<span class="keyword">else</span>
+    options=varargin{1};
+<span class="keyword">end</span>
+fn=fieldnames(options);
+<span class="keyword">for</span> k=1:numel(fn)
+    curr_option=fn{k};
+    item=options.(curr_option);
+    ME.identifier=[<span class="string">'HJW:GetWritableFolder:incorrect_input_opt_'</span> lower(curr_option)];
+    <span class="keyword">switch</span> curr_option
+        <span class="keyword">case</span> <span class="string">'ForceStatus'</span>
+            <span class="keyword">try</span>
+                <span class="keyword">if</span> ~isa(default.root_folder_list{item},<span class="string">'char'</span>)
+                    error(<span class="string">'the indexing must have failed, trigger error'</span>)
+                <span class="keyword">end</span>
+            <span class="keyword">catch</span>
+                ME.message=sprintf(<span class="string">'Invalid input: expected a scalar integer between 1 and %d.'</span>,numel(default.root_folder_list));
+                <span class="keyword">return</span>
+            <span class="keyword">end</span>
+        <span class="keyword">case</span> <span class="string">'ErrorOnNotFound'</span>
+            [passed,options.ErrorOnNotFound]=test_if_scalar_logical(item);
+            <span class="keyword">if</span> ~passed
+                ME.message=<span class="string">'ErrorOnNotFound should be either true or false.'</span>;
+                <span class="keyword">return</span>
+            <span class="keyword">end</span>
+        <span class="keyword">otherwise</span>
+            ME.message=sprintf(<span class="string">'Name,Value pair not recognized: %s.'</span>,curr_option);
+            ME.identifier=<span class="string">'HJW:GetWritableFolder:incorrect_input_NameValue'</span>;
+            <span class="keyword">return</span>
+    <span class="keyword">end</span>
+<span class="keyword">end</span>
+fn=fieldnames(default);
+<span class="keyword">for</span> k=1:numel(fn)
+    <span class="keyword">if</span> ~isfield(options,fn(k))
+        options.(fn{k})=default.(fn{k});
+    <span class="keyword">end</span>
+<span class="keyword">end</span>
+success=true;ME=[];
+<span class="keyword">end</span>
+<span class="keyword">function</span> f=GetPseudoAddonpath
+<span class="keyword">if</span> ispc
+    [ignore,appdata]=system(<span class="string">'echo %APPDATA%'</span>);appdata(appdata&lt;14)=<span class="string">''</span>;
+    f=fullfile(appdata,<span class="string">'MathWorks'</span>,<span class="string">'MATLAB Add-Ons'</span>);
+<span class="keyword">else</span>
+    [ignore,home_dir]=system(<span class="string">'echo $HOME'</span>);home_dir(home_dir&lt;14)=<span class="string">''</span>;
+    f=fullfile(home_dir,<span class="string">'Documents'</span>,<span class="string">'MATLAB'</span>,<span class="string">'Add-Ons'</span>);
+<span class="keyword">end</span>
+<span class="keyword">end</span>
+<span class="keyword">function</span> tf=ifversion(test,Rxxxxab,Oct_flag,Oct_test,Oct_ver)
+<span class="keyword">persistent</span>  v_num v_dict octave
+<span class="keyword">if</span> isempty(v_num)
+    octave=exist(<span class="string">'OCTAVE_VERSION'</span>, <span class="string">'builtin'</span>);
+    v_num=version;
+    ii=strfind(v_num,<span class="string">'.'</span>);<span class="keyword">if</span> numel(ii)~=1,v_num(ii(2):end)=<span class="string">''</span>;ii=ii(1);<span class="keyword">end</span>
+    v_num=[str2double(v_num(1:(ii-1))) str2double(v_num((ii+1):end))];
+    v_num=v_num(1)+v_num(2)/100;v_num=round(100*v_num);
+    v_dict={ <span class="string">'R13'</span> 605;<span class="string">'R13SP1'</span> 605;<span class="string">'R13SP2'</span> 605;<span class="string">'R14'</span> 700;<span class="string">'R14SP1'</span> 700;<span class="string">'R14SP2'</span> 700;
+        <span class="string">'R14SP3'</span> 701;<span class="string">'R2006a'</span> 702;<span class="string">'R2006b'</span> 703;<span class="string">'R2007a'</span> 704;<span class="string">'R2007b'</span> 705;
+        <span class="string">'R2008a'</span> 706;<span class="string">'R2008b'</span> 707;<span class="string">'R2009a'</span> 708;<span class="string">'R2009b'</span> 709;<span class="string">'R2010a'</span> 710;
+        <span class="string">'R2010b'</span> 711;<span class="string">'R2011a'</span> 712;<span class="string">'R2011b'</span> 713;<span class="string">'R2012a'</span> 714;<span class="string">'R2012b'</span> 800;
+        <span class="string">'R2013a'</span> 801;<span class="string">'R2013b'</span> 802;<span class="string">'R2014a'</span> 803;<span class="string">'R2014b'</span> 804;<span class="string">'R2015a'</span> 805;
+        <span class="string">'R2015b'</span> 806;<span class="string">'R2016a'</span> 900;<span class="string">'R2016b'</span> 901;<span class="string">'R2017a'</span> 902;<span class="string">'R2017b'</span> 903;
+        <span class="string">'R2018a'</span> 904;<span class="string">'R2018b'</span> 905;<span class="string">'R2019a'</span> 906;<span class="string">'R2019b'</span> 907;<span class="string">'R2020a'</span> 908;
+        <span class="string">'R2020b'</span> 909;<span class="string">'R2021a'</span> 910};
+<span class="keyword">end</span>
+<span class="keyword">if</span> octave
+    <span class="keyword">if</span> nargin==2
+        warning(<span class="string">'HJW:ifversion:NoOctaveTest'</span>,[<span class="string">'No version test for Octave was provided.'</span>,char(10),<span class="string">'This function might return an unexpected outcome.'</span>])
+        <span class="keyword">if</span> isnumeric(Rxxxxab)
+            v=0.1*Rxxxxab+0.9*fix(Rxxxxab);v=round(100*v);
+        <span class="keyword">else</span>
+            L=ismember(v_dict(:,1),Rxxxxab);
+            <span class="keyword">if</span> sum(L)~=1
+                warning(<span class="string">'HJW:ifversion:NotInDict'</span>,<span class="string">'The requested version is not in the hard-coded list.'</span>)
+                tf=NaN;<span class="keyword">return</span>
+            <span class="keyword">else</span>
+                v=v_dict{L,2};
+            <span class="keyword">end</span>
+        <span class="keyword">end</span>
+    <span class="keyword">elseif</span> nargin==4
+        [test,v]=deal(Oct_flag,Oct_test);
+        v=0.1*v+0.9*fix(v);v=round(100*v);
+    <span class="keyword">else</span>
+        [test,v]=deal(Oct_test,Oct_ver);
+        v=0.1*v+0.9*fix(v);v=round(100*v);
+    <span class="keyword">end</span>
+<span class="keyword">else</span>
+    <span class="keyword">if</span> isnumeric(Rxxxxab)
+        v=0.1*Rxxxxab+0.9*fix(Rxxxxab);v=round(100*v);
+    <span class="keyword">else</span>
+        L=ismember(v_dict(:,1),Rxxxxab);
+        <span class="keyword">if</span> sum(L)~=1
+            warning(<span class="string">'HJW:ifversion:NotInDict'</span>,<span class="string">'The requested version is not in the hard-coded list.'</span>)
+            tf=NaN;<span class="keyword">return</span>
+        <span class="keyword">else</span>
+            v=v_dict{L,2};
+        <span class="keyword">end</span>
+    <span class="keyword">end</span>
+<span class="keyword">end</span>
+<span class="keyword">switch</span> test
+    <span class="keyword">case</span> <span class="string">'=='</span>, tf= v_num == v;
+    <span class="keyword">case</span> <span class="string">'&lt;'</span> , tf= v_num &lt;  v;
+    <span class="keyword">case</span> <span class="string">'&lt;='</span>, tf= v_num &lt;= v;
+    <span class="keyword">case</span> <span class="string">'&gt;'</span> , tf= v_num &gt;  v;
+    <span class="keyword">case</span> <span class="string">'&gt;='</span>, tf= v_num &gt;= v;
+<span class="keyword">end</span>
+<span class="keyword">end</span>
+<span class="keyword">function</span> [connected,timing]=isnetavl
+tf=isnetavl__ICMP_is_blocked;
+<span class="keyword">if</span> isempty(tf)
+    connected=0;
+    timing=0;
+<span class="keyword">else</span>
+    <span class="keyword">if</span> tf
+        [connected,timing]=isnetavl___ping_via_html;
+    <span class="keyword">else</span>
+        [connected,timing]=isnetavl___ping_via_system;
+    <span class="keyword">end</span>
+<span class="keyword">end</span>
+<span class="keyword">end</span>
+<span class="keyword">function</span> [connected,timing]=isnetavl___ping_via_html
+<span class="keyword">persistent</span> UseWebread
+<span class="keyword">if</span> isempty(UseWebread)
+    <span class="keyword">try</span> no_webread=isempty(which(func2str(@webread)));<span class="keyword">catch</span>,no_webread=true;<span class="keyword">end</span>
+	UseWebread=~no_webread;
+<span class="keyword">end</span>
+<span class="keyword">try</span>
+    then=now;
+    <span class="keyword">if</span> UseWebread
+        str=webread(<span class="string">'http://google.com'</span>);
+    <span class="keyword">else</span>
+        str=urlread(<span class="string">'http://google.com'</span>);
+    <span class="keyword">end</span>
+    connected=1;
+    timing=(now-then)*24*3600*1000;
+<span class="keyword">catch</span>
+    connected=0;
+    timing=0;
+<span class="keyword">end</span>
+<span class="keyword">end</span>
+<span class="keyword">function</span> [connected,timing]=isnetavl___ping_via_system
+<span class="keyword">if</span> ispc
+    <span class="keyword">try</span>
+        [ignore_output,b]=system(<span class="string">'ping -n 1 8.8.8.8'</span>);
+        stats=b(strfind(b,<span class="string">' = '</span>)+3);
+        stats=stats(1:3);
+        <span class="keyword">if</span> ~strcmp(stats,<span class="string">'110'</span>)
+            error(<span class="string">'trigger error'</span>)
+        <span class="keyword">else</span>
+            connected=1;
+            [ind1,ind2]=regexp(b,<span class="string">' [0-9]+ms'</span>);
+            timing=b((ind1(1)+1):(ind2(1)-2));
+            timing=str2double(timing);
+        <span class="keyword">end</span>
+    <span class="keyword">catch</span>
+        connected=0;
+        timing=0;
+    <span class="keyword">end</span>
+<span class="keyword">elseif</span> isunix
+    <span class="keyword">try</span>
+        [ignore_output,b]=system(<span class="string">'ping -c 1 8.8.8.8'</span>);
+        ind=regexp(b,<span class="string">', [01] '</span>);
+        <span class="keyword">if</span> b(ind+2)~=<span class="string">'1'</span>
+            error(<span class="string">'trigger error'</span>)
+        <span class="keyword">else</span>
+            connected=1;
+            [ind1,ind2]=regexp(b,<span class="string">'=[0-9.]+ ms'</span>);
+            timing=b((ind1(1)+1):(ind2(1)-2));
+            timing=str2double(timing);
+        <span class="keyword">end</span>
+    <span class="keyword">catch</span>
+        connected=0;
+        timing=0;
+    <span class="keyword">end</span>
+<span class="keyword">else</span>
+    error(<span class="string">'How did you even get Matlab to work?'</span>)
+<span class="keyword">end</span>
+<span class="keyword">end</span>
+<span class="keyword">function</span> [tf,connected,timing]=isnetavl__ICMP_is_blocked
+<span class="keyword">persistent</span> output
+<span class="keyword">if</span> ~isempty(output)
+    tf=output;<span class="keyword">return</span>
+<span class="keyword">end</span>
+[connected,timing]=isnetavl___ping_via_system;
+<span class="keyword">if</span> connected
+    output=false;
+    tf=false;
+    <span class="keyword">return</span>
+<span class="keyword">end</span>
+[connected,timing]=isnetavl___ping_via_html;
+<span class="keyword">if</span> connected
+    output=true;
+    tf=true;
+    <span class="keyword">return</span>
+<span class="keyword">end</span>
+tf=[];
+<span class="keyword">end</span>
+<span class="keyword">function</span> [mex_filename,fun_name]=mexname(fun_name)
+<span class="keyword">persistent</span> append
+<span class="keyword">if</span> isempty(append)
+    v=version;ind=strfind(v,<span class="string">'.'</span>);v(ind(2):end)=<span class="string">''</span>;v=[<span class="string">'v'</span> strrep(v,<span class="string">'.'</span>,<span class="string">'_'</span>)];
+    <span class="keyword">if</span> ~exist(<span class="string">'OCTAVE_VERSION'</span>, <span class="string">'builtin'</span>)
+        type=computer;
+    <span class="keyword">else</span>
+        arch=computer;arch=arch(1:(min(strfind(arch,<span class="string">'-'</span>))-1));
+        <span class="keyword">if</span> ispc
+            <span class="keyword">if</span> strcmp(arch,<span class="string">'x86_64'</span>)  ,type= <span class="string">'win_64'</span>;
+            <span class="keyword">elseif</span> strcmp(arch,<span class="string">'i686'</span>),type= <span class="string">'win_i686'</span>;
+            <span class="keyword">elseif</span> strcmp(arch,<span class="string">'x86'</span>) ,type= <span class="string">'win_x86'</span>;
+            <span class="keyword">else</span>                      ,type=[<span class="string">'win_'</span> arch];
+            <span class="keyword">end</span>
+        <span class="keyword">elseif</span> isunix &amp;&amp; ~ismac
+            <span class="keyword">if</span> strcmp(arch,<span class="string">'i686'</span>)      ,type= <span class="string">'lnx_i686'</span>;
+            <span class="keyword">elseif</span> strcmp(arch,<span class="string">'x86_64'</span>),type= <span class="string">'lnx_64'</span>;
+            <span class="keyword">else</span>                        ,type=[<span class="string">'lnx_'</span> arch];
+            <span class="keyword">end</span>
+        <span class="keyword">elseif</span> ismac
+            <span class="keyword">if</span> strcmp(arch,<span class="string">'x86_64'</span>),type= <span class="string">'mac_64'</span>;
+            <span class="keyword">else</span>                    ,type=[<span class="string">'mac_'</span> arch];
+            <span class="keyword">end</span>
+        <span class="keyword">end</span>
+    <span class="keyword">end</span>
+    type=strrep(strrep(type,<span class="string">'.'</span>,<span class="string">''</span>),<span class="string">'-'</span>,<span class="string">''</span>);
+    append=cell(2,1);
+    append{1}=[<span class="string">'_'</span> v <span class="string">'_'</span> type];
+    append{2}=[append{1} <span class="string">'.'</span> mexext];
+<span class="keyword">end</span>
+<span class="keyword">try</span>
+    <span class="keyword">if</span> ~isvarname(fun_name),error(<span class="string">'trigger catch block'</span>),<span class="keyword">end</span>
+<span class="keyword">catch</span>
+    error(<span class="string">'HJW:mexname:InvalidName'</span>,<span class="string">'The provided input can''t be a function name'</span>)
+<span class="keyword">end</span>
+mex_filename=[fun_name append{2}];
+fun_name=[fun_name append{1}];
+<span class="keyword">end</span>
+<span class="keyword">function</span> [isLogical,val]=test_if_scalar_logical(val)
+<span class="keyword">persistent</span> states
+<span class="keyword">if</span> isempty(states)
+    states={true,false;1,0;<span class="string">'on'</span>,<span class="string">'off'</span>;<span class="string">'enable'</span>,<span class="string">'disable'</span>;<span class="string">'enabled'</span>,<span class="string">'disabled'</span>};
+    <span class="keyword">try</span>
+        states(end+1,:)=eval(<span class="string">'{"on","off"}'</span>);
+    <span class="keyword">catch</span>
+    <span class="keyword">end</span>
+<span class="keyword">end</span>
+isLogical=true;
+<span class="keyword">try</span>
+    <span class="keyword">if</span> isa(val,<span class="string">'char'</span>) || isa(val,<span class="string">'string'</span>)
+        <span class="keyword">try</span> val=lower(val);<span class="keyword">catch</span>,<span class="keyword">end</span>
+    <span class="keyword">end</span>
+    <span class="keyword">for</span> n=1:size(states,1)
+        <span class="keyword">for</span> m=1:2
+            <span class="keyword">if</span> isequal(val,states{n,m})
+                val=states{1,m};<span class="keyword">return</span>
+            <span class="keyword">end</span>
+        <span class="keyword">end</span>
+    <span class="keyword">end</span>
+    <span class="keyword">if</span> isa(val,<span class="string">'matlab.lang.OnOffSwitchState'</span>)
+        val=logical(val);<span class="keyword">return</span>
+    <span class="keyword">end</span>
+<span class="keyword">catch</span>
+<span class="keyword">end</span>
+isLogical=false;
+<span class="keyword">end</span>
+<span class="keyword">function</span> tf=TestFolderWritePermission(f)
+<span class="keyword">if</span> ~( isempty(f) || exist(f,<span class="string">'dir'</span>) )
+    tf=false;<span class="keyword">return</span>
+<span class="keyword">end</span>
+fn=<span class="string">''</span>;
+<span class="keyword">while</span> isempty(fn) || exist(fn,<span class="string">'file'</span>)
+    [ignore,fn]=fileparts(tmpname(<span class="string">'write_permission_test_'</span>,<span class="string">'.txt'</span>));
+    fn=fullfile(f,fn);
+<span class="keyword">end</span>
+<span class="keyword">try</span>
+    fid=fopen(fn,<span class="string">'w'</span>);fprintf(fid,<span class="string">'test'</span>);fclose(fid);
+    delete(fn);
+    tf=true;
+<span class="keyword">catch</span>
+    <span class="keyword">if</span> exist(fn,<span class="string">'file'</span>),<span class="keyword">try</span> delete(fn);<span class="keyword">catch</span>,<span class="keyword">end</span>,<span class="keyword">end</span>
+    tf=false;
+<span class="keyword">end</span>
+<span class="keyword">end</span>
+<span class="keyword">function</span> str=tmpname(StartFilenameWith,ext)
+<span class="keyword">if</span> nargin&lt;1,StartFilenameWith=<span class="string">''</span>;<span class="keyword">end</span>
+<span class="keyword">if</span> ~isempty(StartFilenameWith),StartFilenameWith=[StartFilenameWith <span class="string">'_'</span>];<span class="keyword">end</span>
+<span class="keyword">if</span> nargin&lt;2,ext=<span class="string">''</span>;<span class="keyword">else</span>,<span class="keyword">if</span> ~strcmp(ext(1),<span class="string">'.'</span>),ext=[<span class="string">'.'</span> ext];<span class="keyword">end</span>,<span class="keyword">end</span>
+str=tempname;
+[p,f]=fileparts(str);
+str=fullfile(p,[StartFilenameWith f ext]);
+<span class="keyword">end</span>
+</pre><p class="footer"><br><a href="https://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2021a</a><br></p></div><!--
+##### SOURCE BEGIN #####
+%% getUTC
+%
+% <html><tt style="font-size:0%">Formatted documentation for the getUTC function.</tt>
+% <div style="margin-top:-5em;color:grey">Returns the UTC time. The value is in Matlab datenum format.
+% </div>
+% </html>
+
+%% Description
+% <html>
+% For some applications it is necessary to know the current UTC time. This function will return the
+% current UTC time in the <code>datenum</code> format.
+% <br>There are several methods implemented in this function:
+% <ul>
+%    <li>An implementation that requires a C mex function.
+%      <br>This method requires write access to a folder and a working C&nbsp;compiler. The
+%      compilation result will be stored to a subdirectory of a folder similar to the AddOn path,
+%      or the tempdir, or the current folder. Write permission is tested in that order.</li>
+%    <li>An implementation using <a href="https://www.utctime.net/utc-timestamp">utctime.net</a>.
+%      <br>The NIST has a server that returns the time, but it currently blocks API access.
+%      <br>This method requires internet access.
+%      <br>This fails for some older releases of Matlab.</li>
+%    <li>The local time and timezone offset can be determined with the <code>wmic</code> command
+%      (Windows) or the <code>date</code> command (Linux and Mac).
+%      <br>To speed up the usage of this method, you can cache the difference with
+%      <code>now()</code> in a persistent variable, that way you avoid the need for a slow system
+%      call (especially the first call will be slow).</li>
+% </ul>
+% By default the system call will be tried first, followed by the C implementation, followed by the
+% online implementation. By providing an override, you can bypass this order. Note that with the
+% override the output will be empty if UTC determination fails, while with normal operation
+% <code>getUTC</code> will throw an error.
+% </html>
+
+%% Syntax
+%
+%   atomTime=getUTC
+%   atomTime=getUTC(override)
+
+%% Output arguments
+%
+% <html>
+% <table border=1>
+% <tr><td>
+% atomTime
+% </td><td>
+% The UTC time in the datenum format.
+% </td></tr>
+% </table>
+% </html>
+
+%% Input arguments
+%
+% <html>
+% <table border=1>
+% <tr><td>
+% override
+% </td><td>
+% If you provide an override, this function will no longer return an error, but the output will be
+% empty instead.
+% <br>You can force the use of the C implementation by providing 1 as override value, or 2 for the
+% web version, or 3 for the system call. Any other value will trigger an error.
+% </td></tr>
+% </table>
+% </html>
+
+%% Compatibility, version info, and licence
+% <html>
+% Compatibility considerations:
+% <ul>
+%    <li>Some older releases don't support the web implementation.</li>
+%    <li>The normal system call hangs on ML7.1 on XP. Since ML6.5 works fine on Windows 10, it
+%      seems reasonable to assume that the OS is the cause of the hang. For XP (and older) there is
+%      an alternative strategy in place, but this has a higher likelyhood to fail.</li>
+% </ul>
+% </html>
+% 
+% <html>
+% <table>
+% <tr>
+% <td> Test suite result </td>
+% <td style="border:2px solid black;"> Windows XP/7/10 </td>
+% <td style="border:2px solid black;"> Ubuntu 20.04 LTS </td>
+% <td style="border:2px solid black;"> MacOS 10.15 Catalina </td>
+% </tr>
+% <tr>
+% <td style="border:2px solid black;"> Matlab R2021a </td>
+% <td> <it>W10 : Pass</it> </td>
+% <td> <it></it> </td>
+% <td> <it></it> </td>
+% </tr>
+% <tr>
+% <td style="border:2px solid black;"> Matlab R2020a </td>
+% <td> <it>W10 : Pass</it> </td>
+% <td> <it></it> </td>
+% <td> <it></it> </td>
+% </tr>
+% <tr>
+% <td style="border:2px solid black;"> Matlab R2018a </td>
+% <td> <it>W10 : Pass</it> </td>
+% <td> <it>Pass</it> </td>
+% <td> <it></it> </td>
+% </tr>
+% <tr>
+% <td style="border:2px solid black;"> Matlab R2015a </td>
+% <td> <it>W10 : Pass</it> </td>
+% <td> <it>Pass</it> </td>
+% <td> <it></it> </td>
+% </tr>
+% <tr>
+% <td style="border:2px solid black;"> Matlab R2011a </td>
+% <td> <it>W10 : Partial</it> </td>
+% <td> <it>Partial</it> </td>
+% <td> <it></it> </td>
+% </tr>
+% <tr>
+% <td style="border:2px solid black;"> Matlab R2010b </td>
+% <td> <it></it> </td>
+% <td> <it>Partial</it> </td>
+% <td> <it></it> </td>
+% </tr>
+% <tr>
+% <td style="border:2px solid black;"> Matlab R2010a </td>
+% <td> <it>W7 : Partial</it> </td>
+% <td> <it></it> </td>
+% <td> <it></it> </td>
+% </tr>
+% <tr>
+% <td style="border:2px solid black;"> Matlab R2007b </td>
+% <td> <it>W10 : Partial</it> </td>
+% <td> <it></it> </td>
+% <td> <it></it> </td>
+% </tr>
+% <tr>
+% <td style="border:2px solid black;"> Matlab 7.1 (R14SP3) </td>
+% <td> <it>XP : Partial</it> </td>
+% <td> <it></it> </td>
+% <td> <it></it> </td>
+% </tr>
+% <tr>
+% <td style="border:2px solid black;"> Matlab 6.5 (R13) </td>
+% <td> <it>W10 : Partial</it> </td>
+% <td> <it></it> </td>
+% <td> <it></it> </td>
+% </tr>
+% <tr>
+% <td style="border:2px solid black;"> Octave 6.2.0 </td>
+% <td> <it>W10 : Pass</it> </td>
+% <td> <it></it> </td>
+% <td> <it></it> </td>
+% </tr>
+% <tr>
+% <td style="border:2px solid black;"> Octave 5.2.0 </td>
+% <td> <it>W10 : Pass</it> </td>
+% <td> <it>Pass</it> </td>
+% <td> <it></it> </td>
+% </tr>
+% <tr>
+% <td style="border:2px solid black;"> Octave 4.4.1 </td>
+% <td> <it>W10 : Pass</it> </td>
+% <td> <it></it> </td>
+% <td> <it>Pass</it> </td>
+% </tr>
+% </table>
+% </html>
+%
+%  Version: 2.0.0
+%  Date:    2021-04-27
+%  Author:  H.J. Wisselink
+%  Licence: CC by-nc-sa 4.0 ( https://creativecommons.org/licenses/by-nc-sa/4.0 )
+%  Email = 'h_j_wisselink*alumnus_utwente_nl';
+%  Real_email = regexprep(Email,{'*','_'},{'@','.'})
+
+%% Test suite
+%
+% This tester is included so you can test if your own modifications would introduce any bugs. These
+% tests form the basis for the compatibility table above.
+% 
+% To save space, the tester function below doesn't contain any comments. The full tester function (including all comments) can be found <https://web.archive.org/web/20210427123307/https://cdn-104.anonfiles.com/N3z4v2t3ud/fda295fe-1619527373/aaa___getUTC___test.m here>.
+
+% Test function for getUTC (an error for ML6.5 and R2011a web is expected)
+% 
+% Pass:    passes all tests, failures for C method when no compiler is present
+% Partial: web method fails (only when expected)
+% Fail:    unexpected failures
+%
+function pass_part_fail=aaa___getUTC___test(varargin)
+pass_part_fail='pass';
+getUTC(1);
+t1=now;
+C=getUTC(1);
+t1=(now-t1)*60*60*24;t2=now;
+web=getUTC(2);
+t2=(now-t2)*60*60*24;t3=now;
+cmd=getUTC(3);
+t3=(now-t3)*60*60*24;
+isOctave=exist('OCTAVE_VERSION', 'builtin') ~= 0;
+v=version;ind=strfind(v,'.');v=str2double(v(1:(ind(1)-1)));
+fail=false;
+if isempty(C)
+    if CheckMexCompilerExistence
+        fprintf('C function failed\n')
+        fail=true;
+    else
+        fprintf('C function failed [no compiler found]\n')
+    end
+end
+if ~isnetavl,web=0;end
+if isempty(web)
+    if ~isOctave && v<8
+        fprintf('web function failed as expected\n')
+        pass_part_fail='part';
+    else
+        fail=true;fprintf('web function failed\n')
+    end
+elseif ~isOctave && v<8
+    fail=true;fprintf('web function did not fail as expected\n')
+end
+if isempty(cmd)
+	fail=true;fprintf('system call failed\n')
+end
+if fail
+    if nargout>0
+        pass_part_fail='fail';return
+    else
+        error('test failed')
+    end
+else
+    fprintf('C function took %.2f seconds\n',t1)
+    fprintf('web function took %.2f seconds\n',t2)
+    fprintf('system call took %.2f seconds\n',t3)
+    fprintf('test completed\n')
+end
+if nargout==0,clear,end
+end
+function [tf,ME]=CheckMexCompilerExistence
+persistent tf_ ME_
+if isempty(tf_)
+    if ifversion('<',0,'Octave','>',0)
+        tf_=true;
+    elseif ifversion('>=','R2008a')
+        try cc=mex.getCompilerConfigurations;catch,cc=[];end
+        tf_=~isempty(cc);
+    else
+        if ispc,ext='.bat';else,ext='.sh';end
+        tf_=exist(fullfile(prefdir,['mexopts' ext]),'file');
+    end
+    msg={ 'No selected compiler was found. Please make sure a supported compiler is','installed and set up. Run mex(''-setup'') for version-specific documentation.','','Clear persistent variables (with clear(''all'') or clear(''functions''))','after running mex(''-setup'') to prevent this error.'};
+    msg=sprintf('\n%s',msg{:});msg=msg(2:end);
+    ME_=struct('identifier','HJW:CheckMexCompilerExistence:NoCompiler','message',msg);
+end
+tf=tf_;ME=ME_;
+end
+function atomTime=getUTC(override)
+if nargin==0
+    UTC_epoch_seconds=getUTC_cmd;
+    if isempty(UTC_epoch_seconds)
+        UTC_epoch_seconds=getUTC_c;
+    end
+    if isempty(UTC_epoch_seconds)
+        UTC_epoch_seconds=getUTC_web;
+    end
+    if isempty(UTC_epoch_seconds)
+        error('HJW:getUTC:TimeReadFailed',['All methods of retrieving the UTC timestamp failed.\nEnsure you ','have write access to the current folder and check your internet connection.'])
+    end
+else
+    if override==1
+        UTC_epoch_seconds=getUTC_c(false);
+    elseif override==2
+        UTC_epoch_seconds=getUTC_web;
+    elseif override==3
+        UTC_epoch_seconds=getUTC_cmd;
+    else
+        error('non-implemented override')
+    end
+end
+UTC_offset=UTC_epoch_seconds/(24*60*60);
+atomTime=UTC_offset+datenum(1970,1,1);
+end
+function UTC_epoch_seconds=getUTC_c(allow_rethrow)
+if nargin==0,allow_rethrow=true;end
+persistent utc_time_c tempdir_f funname utc_time_fun_handle Compile_attempts_remaining mexfilename
+if isempty(utc_time_c)
+    tempdir_f=fullfile(GetWritableFolder,'FileExchange','getUTC');
+    try
+        if isempty(strfind([path ';'],[tempdir_f ';']))
+            if ~exist(tempdir_f,'dir'),mkdir(tempdir_f);end
+            addpath(tempdir_f,'-end');
+        end
+    catch
+    end
+    funname='utc_time';
+    [mexfilename,funname]=mexname(funname);
+    try utc_time_fun_handle=str2func(funname);catch,end
+    Compile_attempts_remaining=5;
+    utc_time_c={'#include "mex.h"';
+        '#include "time.h"';
+        '';
+        '/* Abraham Cohn,  3/17/2005 */';
+        '/* Philips Medical Systems */';
+        '';
+        'void mexFunction(int nlhs, mxArray *plhs[], int nrhs,';
+        '                 const mxArray *prhs[])';
+        '{';
+        '  time_t utc;';
+        '  ';
+        '  if (nlhs > 1) {';
+        '    mexErrMsgTxt("Too many output arguments");';
+        '  }';
+        '  ';
+        '  /* Here is a nice ref: www.cplusplus.com/ref/ctime/time.html */';
+        '  time(&utc);';
+        '  /* mexPrintf("UTC time in local zone: %s",ctime(&utc)); */';
+        '  /* mexPrintf("UTC time in GMT: %s",asctime(gmtime(&utc))); */';
+        '  ';
+        '  /* Create matrix for the return argument. */';
+        '  plhs[0] = mxCreateDoubleScalar((double)utc);';
+        '   ';
+        '}'};
+end
+try
+    UTC_epoch_seconds=feval(utc_time_fun_handle);
+catch
+    if exist(mexfilename,'file')
+        if allow_rethrow
+            ME=lasterror;
+            rethrow(ME);
+        else
+            UTC_epoch_seconds=[];return
+        end
+    end
+    if ~CheckMexCompilerExistence
+        Compile_attempts_remaining=0;
+        UTC_epoch_seconds=[];return
+    end
+    Compile_attempts_remaining=Compile_attempts_remaining-1;
+    if Compile_attempts_remaining<0
+        UTC_epoch_seconds=[];return
+    end
+    if TestFolderWritePermission(tempdir_f)
+        f=tempdir_f;
+    else
+        f=pwd;
+    end
+    current_folder=cd(f);
+    try
+        if ~exist(fullfile(f,[funname '.c']),'file')
+            fid=fopen(fullfile(f,[funname '.c']),'w');
+            for line=1:numel(utc_time_c)
+                fprintf(fid,'%s\n',utc_time_c{line});
+            end
+            fclose(fid);
+        end
+        try
+            mex([funname '.c']);
+        catch
+        end
+        for ext={'c','o'}
+            file=fullfile(f,[funname '.' ext{1}]);if exist(file,'file'),delete(file),end
+        end
+    catch
+    end
+    cd(current_folder);
+    if exist(mexfilename,'file')
+        utc_time_fun_handle=str2func(funname);
+        UTC_epoch_seconds=getUTC_c(allow_rethrow);
+    else
+        UTC_epoch_seconds=[];
+    end
+end
+end
+function UTC_epoch_seconds=getUTC_cmd
+persistent WinVer
+if isempty(WinVer)
+    try
+        if ~ispc
+            error('trigger')
+        else
+            [status,str]=system('systeminfo');
+            ind1= 1+strfind(str,':');ind1=ind1(3);
+            ind2=-1+strfind(str,'.');ind2(ind2<ind1)=[];
+            WinVer=str2double(str(ind1:ind2(1)));
+        end
+    catch
+        WinVer=NaN;
+    end
+end
+try
+    if ispc
+        if isnan(WinVer)
+            error('trigger')
+        elseif WinVer<=5
+            pausetime=1;
+            fn1=[tempname,'.bat'];fn2=[tempname,'.txt'];
+            fid=fopen(fn1,'w');
+            fprintf(fid,'wmic os get LocalDateTime /value > "%s"\nexit',fn2);
+            fclose(fid);
+            system(['start /min "" cmd /c "' fn1 '"']);
+            pause(pausetime)
+            str=fileread(fn2);
+            try delete(fn1);catch,end
+            try delete(fn2);catch,end
+        else
+            pausetime=0;
+            [status,str]=system('wmic os get LocalDateTime /value');
+        end
+        str=str(str>=43 & str<=57);
+        date=mat2cell(str(1:21),1,[4 2 2,2 2 2+1+6]);date=str2double(date);
+        date(5)=date(5)-str2double(str(22:end));
+        date=num2cell(date);
+        UTC_epoch_seconds=(datenum(date{:})-datenum(1970,1,1))*24*60*60;
+        UTC_epoch_seconds=UTC_epoch_seconds+pausetime;
+    else
+        [status,str]=system('date +%s');
+        UTC_epoch_seconds=str2double(str);
+    end
+catch
+    UTC_epoch_seconds=[];
+end
+end
+function UTC_epoch_seconds=getUTC_web
+persistent UseWebread
+if isempty(UseWebread)
+    try UseWebread=~isempty(which(func2str(@webread)));catch,UseWebread=false;end
+end
+if ~isnetavl,UTC_epoch_seconds=[];return,end
+for tries=1:3
+    try
+        if UseWebread
+            data=webread('http://www.utctime.net/utc-timestamp');
+        else
+            data=urlread('http://www.utctime.net/utc-timestamp');
+        end
+        break
+    catch
+    end
+end
+try
+    data(data==' ')='';
+    pat='vartimestamp=';
+    ind1=strfind(data,pat)+numel(pat);
+    ind2=strfind(data,';')-1;
+    ind2(ind2<ind1)=[];
+    UTC_epoch_seconds=str2double(data(ind1:ind2(1)));
+catch
+    UTC_epoch_seconds=[];
+end
+end
+function [f,status]=GetWritableFolder(varargin)
+[success,options,ME]=GetWritableFolder_parse_inputs(varargin{:});
+if ~success
+    rethrow(ME)
+else
+    [ForceStatus,ErrorOnNotFound,root_folder_list]=deal(options.ForceStatus,options.ErrorOnNotFound,options.root_folder_list);
+end
+root_folder_list{end}=pwd;
+if ForceStatus
+    status=ForceStatus;f=fullfile(root_folder_list{status},'PersistentFolder');
+    try if ~exist(f,'dir'),mkdir(f);end,catch,end
+    return
+end
+status=1;f=root_folder_list{status};
+try if ~exist(f,'dir'),mkdir(f);end,catch,end
+if ~TestFolderWritePermission(f)
+    status=2;f=root_folder_list{status};
+    try if ~exist(f,'dir'),mkdir(f);end,catch,end
+    if ~TestFolderWritePermission(f)
+        status=3;f=root_folder_list{status};
+    end
+end
+f=fullfile(f,'PersistentFolder');
+try if ~exist(f,'dir'),mkdir(f);end,catch,end
+if ~TestFolderWritePermission(f)
+    if ErrorOnNotFound
+        error('HJW:GetWritableFolder:NoWritableFolder','This function was unable to find a folder with write permissions.')
+    else
+        status=0;f='';
+    end
+end
+end
+function [success,options,ME]=GetWritableFolder_parse_inputs(varargin)
+success=false;
+options=struct;
+ME=struct('identifier','','message','');
+persistent default
+if isempty(default)
+    default.ForceStatus=false;
+    default.ErrorOnNotFound=false;
+    default.root_folder_list={ GetPseudoAddonpath;
+        fullfile(tempdir,'MATLAB');
+        ''};
+end
+if nargin==2
+    options=default;
+    success=true;
+    return
+end
+struct_input=       nargin   ==1 && isa(varargin{1},'struct');
+NameValue_input=mod(nargin,2)==0 && all( cellfun('isclass',varargin(1:2:end),'char'  ) |cellfun('isclass',varargin(1:2:end),'string')   );
+if ~( struct_input || NameValue_input )
+    ME.message=['The input is expected to be either a struct, ',char(10),'or consist of Name,Value pairs.'];
+    ME.identifier='HJW:GetWritableFolder:incorrect_input_options';
+    return
+end
+if NameValue_input
+    for n=1:2:numel(varargin)
+        try
+            options.(varargin{n})=varargin{n+1};
+        catch
+            ME.message='Parsing of Name,Value pairs failed.';
+            ME.identifier='HJW:GetWritableFolder:incorrect_input_NameValue';
+            return
+        end
+    end
+else
+    options=varargin{1};
+end
+fn=fieldnames(options);
+for k=1:numel(fn)
+    curr_option=fn{k};
+    item=options.(curr_option);
+    ME.identifier=['HJW:GetWritableFolder:incorrect_input_opt_' lower(curr_option)];
+    switch curr_option
+        case 'ForceStatus'
+            try
+                if ~isa(default.root_folder_list{item},'char')
+                    error('the indexing must have failed, trigger error')
+                end
+            catch
+                ME.message=sprintf('Invalid input: expected a scalar integer between 1 and %d.',numel(default.root_folder_list));
+                return
+            end
+        case 'ErrorOnNotFound'
+            [passed,options.ErrorOnNotFound]=test_if_scalar_logical(item);
+            if ~passed
+                ME.message='ErrorOnNotFound should be either true or false.';
+                return
+            end
+        otherwise
+            ME.message=sprintf('Name,Value pair not recognized: %s.',curr_option);
+            ME.identifier='HJW:GetWritableFolder:incorrect_input_NameValue';
+            return
+    end
+end
+fn=fieldnames(default);
+for k=1:numel(fn)
+    if ~isfield(options,fn(k))
+        options.(fn{k})=default.(fn{k});
+    end
+end
+success=true;ME=[];
+end
+function f=GetPseudoAddonpath
+if ispc
+    [ignore,appdata]=system('echo %APPDATA%');appdata(appdata<14)='';
+    f=fullfile(appdata,'MathWorks','MATLAB Add-Ons');
+else
+    [ignore,home_dir]=system('echo $HOME');home_dir(home_dir<14)='';
+    f=fullfile(home_dir,'Documents','MATLAB','Add-Ons');
+end
+end
+function tf=ifversion(test,Rxxxxab,Oct_flag,Oct_test,Oct_ver)
+persistent  v_num v_dict octave
+if isempty(v_num)
+    octave=exist('OCTAVE_VERSION', 'builtin');
+    v_num=version;
+    ii=strfind(v_num,'.');if numel(ii)~=1,v_num(ii(2):end)='';ii=ii(1);end
+    v_num=[str2double(v_num(1:(ii-1))) str2double(v_num((ii+1):end))];
+    v_num=v_num(1)+v_num(2)/100;v_num=round(100*v_num);
+    v_dict={ 'R13' 605;'R13SP1' 605;'R13SP2' 605;'R14' 700;'R14SP1' 700;'R14SP2' 700;
+        'R14SP3' 701;'R2006a' 702;'R2006b' 703;'R2007a' 704;'R2007b' 705;
+        'R2008a' 706;'R2008b' 707;'R2009a' 708;'R2009b' 709;'R2010a' 710;
+        'R2010b' 711;'R2011a' 712;'R2011b' 713;'R2012a' 714;'R2012b' 800;
+        'R2013a' 801;'R2013b' 802;'R2014a' 803;'R2014b' 804;'R2015a' 805;
+        'R2015b' 806;'R2016a' 900;'R2016b' 901;'R2017a' 902;'R2017b' 903;
+        'R2018a' 904;'R2018b' 905;'R2019a' 906;'R2019b' 907;'R2020a' 908;
+        'R2020b' 909;'R2021a' 910};
+end
+if octave
+    if nargin==2
+        warning('HJW:ifversion:NoOctaveTest',['No version test for Octave was provided.',char(10),'This function might return an unexpected outcome.'])
+        if isnumeric(Rxxxxab)
+            v=0.1*Rxxxxab+0.9*fix(Rxxxxab);v=round(100*v);
+        else
+            L=ismember(v_dict(:,1),Rxxxxab);
+            if sum(L)~=1
+                warning('HJW:ifversion:NotInDict','The requested version is not in the hard-coded list.')
+                tf=NaN;return
+            else
+                v=v_dict{L,2};
+            end
+        end
+    elseif nargin==4
+        [test,v]=deal(Oct_flag,Oct_test);
+        v=0.1*v+0.9*fix(v);v=round(100*v);
+    else
+        [test,v]=deal(Oct_test,Oct_ver);
+        v=0.1*v+0.9*fix(v);v=round(100*v);
+    end
+else
+    if isnumeric(Rxxxxab)
+        v=0.1*Rxxxxab+0.9*fix(Rxxxxab);v=round(100*v);
+    else
+        L=ismember(v_dict(:,1),Rxxxxab);
+        if sum(L)~=1
+            warning('HJW:ifversion:NotInDict','The requested version is not in the hard-coded list.')
+            tf=NaN;return
+        else
+            v=v_dict{L,2};
+        end
+    end
+end
+switch test
+    case '==', tf= v_num == v;
+    case '<' , tf= v_num <  v;
+    case '<=', tf= v_num <= v;
+    case '>' , tf= v_num >  v;
+    case '>=', tf= v_num >= v;
+end
+end
+function [connected,timing]=isnetavl
+tf=isnetavl__ICMP_is_blocked;
+if isempty(tf)
+    connected=0;
+    timing=0;
+else
+    if tf
+        [connected,timing]=isnetavl___ping_via_html;
+    else
+        [connected,timing]=isnetavl___ping_via_system;
+    end
+end
+end
+function [connected,timing]=isnetavl___ping_via_html
+persistent UseWebread
+if isempty(UseWebread)
+    try no_webread=isempty(which(func2str(@webread)));catch,no_webread=true;end
+	UseWebread=~no_webread;
+end
+try
+    then=now;
+    if UseWebread
+        str=webread('http://google.com');
+    else
+        str=urlread('http://google.com');
+    end
+    connected=1;
+    timing=(now-then)*24*3600*1000;
+catch
+    connected=0;
+    timing=0;
+end
+end
+function [connected,timing]=isnetavl___ping_via_system
+if ispc
+    try
+        [ignore_output,b]=system('ping -n 1 8.8.8.8');
+        stats=b(strfind(b,' = ')+3);
+        stats=stats(1:3);
+        if ~strcmp(stats,'110')
+            error('trigger error')
+        else
+            connected=1;
+            [ind1,ind2]=regexp(b,' [0-9]+ms');
+            timing=b((ind1(1)+1):(ind2(1)-2));
+            timing=str2double(timing);
+        end
+    catch
+        connected=0;
+        timing=0;
+    end
+elseif isunix
+    try
+        [ignore_output,b]=system('ping -c 1 8.8.8.8');
+        ind=regexp(b,', [01] ');
+        if b(ind+2)~='1'
+            error('trigger error')
+        else
+            connected=1;
+            [ind1,ind2]=regexp(b,'=[0-9.]+ ms');
+            timing=b((ind1(1)+1):(ind2(1)-2));
+            timing=str2double(timing);
+        end
+    catch
+        connected=0;
+        timing=0;
+    end
+else
+    error('How did you even get Matlab to work?')
+end
+end
+function [tf,connected,timing]=isnetavl__ICMP_is_blocked
+persistent output
+if ~isempty(output)
+    tf=output;return
+end
+[connected,timing]=isnetavl___ping_via_system;
+if connected
+    output=false;
+    tf=false;
+    return
+end
+[connected,timing]=isnetavl___ping_via_html;
+if connected
+    output=true;
+    tf=true;
+    return
+end
+tf=[];
+end
+function [mex_filename,fun_name]=mexname(fun_name)
+persistent append
+if isempty(append)
+    v=version;ind=strfind(v,'.');v(ind(2):end)='';v=['v' strrep(v,'.','_')];
+    if ~exist('OCTAVE_VERSION', 'builtin')
+        type=computer;
+    else
+        arch=computer;arch=arch(1:(min(strfind(arch,'-'))-1));
+        if ispc
+            if strcmp(arch,'x86_64')  ,type= 'win_64';
+            elseif strcmp(arch,'i686'),type= 'win_i686';
+            elseif strcmp(arch,'x86') ,type= 'win_x86';
+            else                      ,type=['win_' arch];
+            end
+        elseif isunix && ~ismac
+            if strcmp(arch,'i686')      ,type= 'lnx_i686';
+            elseif strcmp(arch,'x86_64'),type= 'lnx_64';
+            else                        ,type=['lnx_' arch];
+            end
+        elseif ismac
+            if strcmp(arch,'x86_64'),type= 'mac_64';
+            else                    ,type=['mac_' arch];
+            end
+        end
+    end
+    type=strrep(strrep(type,'.',''),'-','');
+    append=cell(2,1);
+    append{1}=['_' v '_' type];
+    append{2}=[append{1} '.' mexext];
+end
+try
+    if ~isvarname(fun_name),error('trigger catch block'),end
+catch
+    error('HJW:mexname:InvalidName','The provided input can''t be a function name')
+end
+mex_filename=[fun_name append{2}];
+fun_name=[fun_name append{1}];
+end
+function [isLogical,val]=test_if_scalar_logical(val)
+persistent states
+if isempty(states)
+    states={true,false;1,0;'on','off';'enable','disable';'enabled','disabled'};
+    try
+        states(end+1,:)=eval('{"on","off"}');
+    catch
+    end
+end
+isLogical=true;
+try
+    if isa(val,'char') || isa(val,'string')
+        try val=lower(val);catch,end
+    end
+    for n=1:size(states,1)
+        for m=1:2
+            if isequal(val,states{n,m})
+                val=states{1,m};return
+            end
+        end
+    end
+    if isa(val,'matlab.lang.OnOffSwitchState')
+        val=logical(val);return
+    end
+catch
+end
+isLogical=false;
+end
+function tf=TestFolderWritePermission(f)
+if ~( isempty(f) || exist(f,'dir') )
+    tf=false;return
+end
+fn='';
+while isempty(fn) || exist(fn,'file')
+    [ignore,fn]=fileparts(tmpname('write_permission_test_','.txt'));
+    fn=fullfile(f,fn);
+end
+try
+    fid=fopen(fn,'w');fprintf(fid,'test');fclose(fid);
+    delete(fn);
+    tf=true;
+catch
+    if exist(fn,'file'),try delete(fn);catch,end,end
+    tf=false;
+end
+end
+function str=tmpname(StartFilenameWith,ext)
+if nargin<1,StartFilenameWith='';end
+if ~isempty(StartFilenameWith),StartFilenameWith=[StartFilenameWith '_'];end
+if nargin<2,ext='';else,if ~strcmp(ext(1),'.'),ext=['.' ext];end,end
+str=tempname;
+[p,f]=fileparts(str);
+str=fullfile(p,[StartFilenameWith f ext]);
+end
+
+##### SOURCE END #####
+--></body></html>
