@@ -19,8 +19,8 @@ function atomTime=getUTC(override)
 % 
 %/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%
 %|                                                                         |%
-%|  Version: 2.0.0                                                         |%
-%|  Date:    2021-04-27                                                    |%
+%|  Version: 2.0.1                                                         |%
+%|  Date:    2021-05-19                                                    |%
 %|  Author:  H.J. Wisselink                                                |%
 %|  Licence: CC by-nc-sa 4.0 ( creativecommons.org/licenses/by-nc-sa/4.0 ) |%
 %|  Email = 'h_j_wisselink*alumnus_utwente_nl';                            |%
@@ -270,7 +270,7 @@ end
 end
 function UTC_epoch_seconds=getUTC_web
 %Read the timestamp from a web server.
-%For some reason this fails for old Matlab releases (at least ML6.5-R2011a).
+%For some reason this fails for old Matlab releases (at least ML6.5-R2013b).
 
 persistent UseWebread%Only search the path once per session.
 if isempty(UseWebread)
@@ -285,6 +285,7 @@ for tries=1:3
         if UseWebread
             data=webread('http://www.utctime.net/utc-timestamp');
         else
+            %This probably only works for Octave.
             data=urlread('http://www.utctime.net/utc-timestamp'); %#ok<URLRD>
         end
         break
@@ -528,28 +529,21 @@ function tf=ifversion(test,Rxxxxab,Oct_flag,Oct_test,Oct_ver)
 % not be complete. Although it should be possible to load the list from Wikipedia, this is not
 % implemented.
 %
-%  _____________________________________________________________________________
-% | Compatibility   | Windows XP/7/10 | Ubuntu 20.04 LTS | MacOS 10.15 Catalina |
-% |-----------------|-----------------|------------------|----------------------|
-% | ML R2020b       | W10: works      |  not tested      |  not tested          |
-% | ML R2018a       | W10: works      |  works           |  not tested          |
-% | ML R2015a       | W10: works      |  works           |  not tested          |
-% | ML R2011a       | W10: works      |  works           |  not tested          |
-% | ML R2010b       | not tested      |  works           |  not tested          |
-% | ML R2010a       | W7:  works      |  not tested      |  not tested          |
-% | ML 7.1 (R14SP3) | XP:  works      |  not tested      |  not tested          |
-% | ML 6.5 (R13)    | W10: works      |  not tested      |  not tested          |
-% | Octave 6.1.0    | W10: works      |  not tested      |  not tested          |
-% | Octave 5.2.0    | W10: works      |  works           |  not tested          |
-% | Octave 4.4.1    | W10: works      |  not tested      |  works               |
-% """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%
+%|                                                                         |%
+%|  Version: 1.0.6                                                         |%
+%|  Date:    2021-03-11                                                    |%
+%|  Author:  H.J. Wisselink                                                |%
+%|  Licence: CC by-nc-sa 4.0 ( creativecommons.org/licenses/by-nc-sa/4.0 ) |%
+%|  Email = 'h_j_wisselink*alumnus_utwente_nl';                            |%
+%|  Real_email = regexprep(Email,{'*','_'},{'@','.'})                      |%
+%|                                                                         |%
+%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%
 %
-% Version: 1.0.6
-% Date:    2021-03-11
-% Author:  H.J. Wisselink
-% Licence: CC by-nc-sa 4.0 ( https://creativecommons.org/licenses/by-nc-sa/4.0 )
-% Email = 'h_j_wisselink*alumnus_utwente_nl';
-% Real_email = regexprep(Email,{'*','_'},{'@','.'})
+% Tested on several versions of Matlab (ML 6.5 and onward) and Octave (4.4.1 and onward), and on
+% multiple operating systems (Windows/Ubuntu/MacOS). For the full test matrix, see the HTML doc.
+% Compatibility considerations:
+% - This is expected to work on all releases.
 
 %The decimal of the version numbers are padded with a 0 to make sure v7.10 is larger than v7.9.
 %This does mean that any numeric version input needs to be adapted. multiply by 100 and round to
@@ -629,16 +623,20 @@ switch test
     case '>=', tf= v_num >= v;
 end
 end
-function [connected,timing]=isnetavl
-% Check for an internet connection by pinging one of Google's DNSes.
+function [connected,timing]=isnetavl(test_Matlab_instead_of_system)
+% Check for an internet connection by pinging Google.
 % Optional second output is the ping time (0 if not connected).
 %
 % Includes a fallback to HTML if usage of ping is not allowed. This increases the measured ping.
 %
+% If you provide an input, the HTML method will be used, which has the benefit of testing if Matlab
+% (or Octave) is able to connect to the internet. This might be relevant if there are proxy
+% settings or firewall rules specific to Matlab/Octave.
+%
 %/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%
 %|                                                                         |%
-%|  Version: 1.2.2                                                         |%
-%|  Date:    2020-07-06                                                    |%
+%|  Version: 2.0.0                                                         |%
+%|  Date:    2021-05-19                                                    |%
 %|  Author:  H.J. Wisselink                                                |%
 %|  Licence: CC by-nc-sa 4.0 ( creativecommons.org/licenses/by-nc-sa/4.0 ) |%
 %|  Email = 'h_j_wisselink*alumnus_utwente_nl';                            |%
@@ -650,6 +648,17 @@ function [connected,timing]=isnetavl
 % multiple operating systems (Windows/Ubuntu/MacOS). For the full test matrix, see the HTML doc.
 % Compatibility considerations:
 % - This is expected to work on all releases.
+% - If you have proxy/firewall settings specific to Matlab/Octave, make sure to use the HTML method
+%   by providing an input.
+
+if nargin==0,                                                        tf=false;
+else,[tf1,tf2]=test_if_scalar_logical(test_Matlab_instead_of_system);tf=tf1&&tf2;
+end
+if tf
+    %(the timing is not reliable)
+    [connected,timing]=isnetavl___ping_via_html;
+    return
+end
 
 tf=isnetavl__ICMP_is_blocked;
 if isempty(tf)
