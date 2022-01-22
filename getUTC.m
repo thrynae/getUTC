@@ -1,5 +1,5 @@
 function atomTime=getUTC(override)
-%Returns the UTC time. The value is in Matlab datenum format.
+%Returns the UTC time in the Matlab datenum format
 %
 %example syntax:
 % disp(datestr(getUTC))
@@ -12,15 +12,15 @@ function atomTime=getUTC(override)
 % - An implementation using https://www.utctime.net/utc-timestamp.
 %   The NIST has a server that returns the time, but it currently blocks API access.
 %   This method requires internet access.
-% - The local time and timezone offset can be determined with the wmic command (Windows) or the
-%   date command (Linux and Mac).
+% - The local time and timezone offset can be determined with the wmic command or the get-date
+%   Powershell function (Windows) or the date command (Linux and Mac).
 %   To speed up the usage of this method, you can cache the difference with now() in a persistent
 %   variable, that way you avoid the need for a slow system call.
 % 
 %/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%
 %|                                                                         |%
-%|  Version: 2.0.1                                                         |%
-%|  Date:    2021-05-19                                                    |%
+%|  Version: 2.1.0                                                         |%
+%|  Date:    2022-01-22                                                    |%
 %|  Author:  H.J. Wisselink                                                |%
 %|  Licence: CC by-nc-sa 4.0 ( creativecommons.org/licenses/by-nc-sa/4.0 ) |%
 %|  Email = 'h_j_wisselink*alumnus_utwente_nl';                            |%
@@ -35,9 +35,11 @@ function atomTime=getUTC(override)
 % - The normal system call hangs on ML7.1 on XP. Since ML6.5 works fine on Windows 10, it seems
 %   reasonable to assume that the OS is the cause of the hang. For XP (and older) there is an
 %   alternative strategy in place, but this has a higher likelyhood to fail.
+% - Similarly, as wmic has been deprecated, a Powershell alternative should be used on newer
+%   versions of Windows. The need for this is automatically detected.
 
 if nargin==0
-    %normal flow: first try the cmd method, then the C method, then the web method
+    %Normal flow: first try the cmd method, then the C method, then the web method.
     UTC_epoch_seconds=getUTC_cmd;
     if isempty(UTC_epoch_seconds)
         UTC_epoch_seconds=getUTC_c;
@@ -51,7 +53,7 @@ if nargin==0
             'have write access to the current folder and check your internet connection.'])
     end
 else
-    %debug/test, will not throw an error on fail
+    %Override for debug/test, this will not throw an error on fail.
     if override==1
         UTC_epoch_seconds=getUTC_c(false);
     elseif override==2
@@ -67,8 +69,8 @@ atomTime=UTC_offset+datenum(1970,1,1);
 end
 function [tf,ME]=CheckMexCompilerExistence
 % Returns true if a mex compiler is expected to be installed.
-% The method used for R2008a and later is fairly slow, so the flag is stored in a persistent
-% variable. Use clear('all') or clear('functions') to reset this.
+% The method used for R2008a and later is fairly slow, so the flag is stored in a file. Run
+% ClearMexCompilerExistenceFlag() to reset this test.
 %
 % This function may result in false positives (e.g. by detecting an installed compiler that doesn't
 % work, or if a compiler is required for a specific language).
@@ -76,28 +78,222 @@ function [tf,ME]=CheckMexCompilerExistence
 %
 % Based on: http://web.archive.org/web/2/http://www.mathworks.com/matlabcentral/answers/99389
 % (this link will redirect to the URL with the full title)
+%
+% The actual test will be performed in a separate function. That way the same persistent can be
+% used for different functions containing this check as a subfunction.
+
 persistent tf_ ME_
 if isempty(tf_)
-    if ifversion('<',0,'Octave','>',0)
-        tf_=true; % Octave comes with a compiler out of the box
-    elseif ifversion('>=','R2008a')
-        try cc=mex.getCompilerConfigurations;catch,cc=[];end
-        tf_=~isempty(cc);
-    else
-        if ispc,ext='.bat';else,ext='.sh';end
-        tf_=exist(fullfile(prefdir,['mexopts' ext]),'file');
-    end
-    
-    msg={...
-        'No selected compiler was found. Please make sure a supported compiler is',...
-        'installed and set up. Run mex(''-setup'') for version-specific documentation.',...
-        '',...
-        'Clear persistent variables (with clear(''all'') or clear(''functions''))',...
-        'after running mex(''-setup'') to prevent this error.'};
-    msg=sprintf('\n%s',msg{:});msg=msg(2:end);
-    ME_=struct('identifier','HJW:CheckMexCompilerExistence:NoCompiler','message',msg);
+    fun_handle='CheckMexCompilerExistence_persistent';
+
+    %In some release-runtime combinations addpath has a permanent effect, in others it doesn't. By
+    %putting this code in this block, we are trying to keep these queries to a minimum.
+    [p,ME]=CreatePathFolder__CheckMexCompilerExistence_persistent;
+    if ~isempty(ME),tf=false;return,end
+
+    fn=fullfile(p,'ClearMexCompilerExistenceFlag.m');
+    txt={...
+        'function ClearMexCompilerExistenceFlag';
+        'fn=create_fn';
+        'if exist(fn,''file''),delete(fn),end';
+        'end';
+        'function fn=create_fn';
+        'v=version;v=v(regexp(v,''[a-zA-Z0-9()\.]''));';
+        'if ~exist(''OCTAVE_VERSION'', ''builtin'')';
+        '    runtime=''MATLAB'';';
+        '    type=computer;';
+        'else';
+        '    runtime=''OCTAVE'';';
+        '    arch=computer;arch=arch(1:(min(strfind(arch,''-''))-1));';
+        '    if ispc';
+        '        if strcmp(arch,''x86_64'')  ,type= ''win_64'';';
+        '        elseif strcmp(arch,''i686''),type= ''win_i686'';';
+        '        elseif strcmp(arch,''x86'') ,type= ''win_x86'';';
+        '        else                      ,type=[''win_'' arch];';
+        '        end';
+        '    elseif isunix && ~ismac %Essentially this is islinux';
+        '        if strcmp(arch,''i686'')      ,type= ''lnx_i686'';';
+        '        elseif strcmp(arch,''x86_64''),type= ''lnx_64'';';
+        '        else                        ,type=[''lnx_'' arch];';
+        '        end';
+        '    elseif ismac';
+        '        if strcmp(arch,''x86_64''),type= ''mac_64'';';
+        '        else                    ,type=[''mac_'' arch];';
+        '        end';
+        '    end';
+        'end';
+        'type=strrep(strrep(type,''.'',''''),''-'','''');';
+        'flag=[''flag_'' runtime ''_'' v ''_'' type ''.txt''];';
+        'fn=fullfile(fileparts(mfilename(''fullpath'')),flag);';
+        'end';
+        ''};
+    fid=fopen(fn,'wt');fprintf(fid,'%s\n',txt{:});fclose(fid);
+
+    fn=fullfile(p,[fun_handle '.m']);
+    txt={...
+        'function [tf,ME]=CheckMexCompilerExistence_persistent';
+        '% Returns true if a mex compiler is expected to be installed.';
+        '% The method used for R2008a and later is fairly slow, so the flag is stored in';
+        '% a file. Run ClearMexCompilerExistenceFlag() to reset this test.';
+        '%';
+        '% This function may result in false positives (e.g. by detecting an installed';
+        '% compiler that doesn''t work, or if a compiler is required for a specific';
+        '% language). False negatives should be rare.';
+        '%';
+        '% Based on: http://web.archive.org/web/2/';
+        '% http://www.mathworks.com/matlabcentral/answers/99389';
+        '% (this link will redirect to the URL with the full title)';
+        '';
+        'persistent tf_ ME_';
+        'if isempty(tf_)';
+        '    ME_=create_ME;';
+        '    fn =create_fn;';
+        '    if exist(fn,''file'')';
+        '        str=fileread(fn);';
+        '        tf_=strcmp(str,''compiler found'');';
+        '    else';
+        '        % Use evalc to suppress anything printed to the command window.';
+        '        [txt,tf_]=evalc(func2str(@get_tf)); %#ok<ASGLU>';
+        '        fid=fopen(fn,''w'');';
+        '        if tf_,fprintf(fid,''compiler found'');';
+        '        else , fprintf(fid,''compiler not found'');end';
+        '        fclose(fid);';
+        '    end';
+        '    ';
+        'end';
+        'tf=tf_;ME=ME_;';
+        'end';
+        'function fn=create_fn';
+        'v=version;v=v(regexp(v,''[a-zA-Z0-9()\.]''));';
+        'if ~exist(''OCTAVE_VERSION'', ''builtin'')';
+        '    runtime=''MATLAB'';';
+        '    type=computer;';
+        'else';
+        '    runtime=''OCTAVE'';';
+        '    arch=computer;arch=arch(1:(min(strfind(arch,''-''))-1));';
+        '    if ispc';
+        '        if strcmp(arch,''x86_64'')  ,type= ''win_64'';';
+        '        elseif strcmp(arch,''i686''),type= ''win_i686'';';
+        '        elseif strcmp(arch,''x86'') ,type= ''win_x86'';';
+        '        else                      ,type=[''win_'' arch];';
+        '        end';
+        '    elseif isunix && ~ismac %Essentially this is islinux';
+        '        if strcmp(arch,''i686'')      ,type= ''lnx_i686'';';
+        '        elseif strcmp(arch,''x86_64''),type= ''lnx_64'';';
+        '        else                        ,type=[''lnx_'' arch];';
+        '        end';
+        '    elseif ismac';
+        '        if strcmp(arch,''x86_64''),type= ''mac_64'';';
+        '        else                    ,type=[''mac_'' arch];';
+        '        end';
+        '    end';
+        'end';
+        'type=strrep(strrep(type,''.'',''''),''-'','''');';
+        'flag=[''flag_'' runtime ''_'' v ''_'' type ''.txt''];';
+        'fn=fullfile(fileparts(mfilename(''fullpath'')),flag);';
+        'end';
+        'function ME_=create_ME';
+        'msg={...';
+        '    ''No selected compiler was found.'',...';
+        '    ''Please make sure a supported compiler is installed and set up.'',...';
+        '    ''Run mex(''''-setup'''') for version-specific documentation.'',...';
+        '    '''',...';
+        '    ''Run ClearMexCompilerExistenceFlag() to reset this test.''};';
+        'msg=sprintf(''\n%s'',msg{:});msg=msg(2:end);';
+        'ME_=struct(...';
+        '    ''identifier'',''HJW:CheckMexCompilerExistence:NoCompiler'',...';
+        '    ''message'',msg);';
+        'end';
+        'function tf=get_tf';
+        '[isOctave,v_num]=ver_info;';
+        'if isOctave';
+        '        % Octave normally comes with a compiler out of the box, but for some';
+        '        % methods of installation an additional package may be required.';
+        '        tf=~isempty(try_file_compile);';
+        '    elseif v_num>=706 % ifversion(''>='',''R2008a'')';
+        '        % Just try to compile a MWE. Getting the configuration is very slow.';
+        '        [cc,TryNormalCheck]=try_file_compile;';
+        '        if TryNormalCheck';
+        '            % Something strange happened, so try the normal check anyway.';
+        '            try cc=mex.getCompilerConfigurations;catch,cc=[];end';
+        '        end';
+        '        tf=~isempty(cc);';
+        '    else';
+        '        if ispc,ext=''.bat'';else,ext=''.sh'';end';
+        '        tf=exist(fullfile(prefdir,[''mexopts'' ext]),''file'');';
+        'end';
+        'end';
+        'function [isOctave,v_num]=ver_info';
+        '% This is a compact and feature-poor equivalent of ifversion.';
+        '% To save space this can be used as an alternative.';
+        '% Example: R2018a is 9.4, so v_num will be 904.';
+        'isOctave=exist(''OCTAVE_VERSION'', ''builtin'');';
+        'v_num=version;';
+        'ii=strfind(v_num,''.'');if numel(ii)~=1,v_num(ii(2):end)='''';ii=ii(1);end';
+        'v_num=[str2double(v_num(1:(ii-1))) str2double(v_num((ii+1):end))];';
+        'v_num=v_num(1)+v_num(2)/100;v_num=round(100*v_num);';
+        'end';
+        'function [cc,TryNormalCheck]=try_file_compile';
+        'TryNormalCheck=false;';
+        'try';
+        '    [p,n]=fileparts(tempname);e=''.c'';';
+        '    n=n(regexp(n,''[a-zA-Z0-9_]'')); % Keep only valid characters.';
+        '    n=[''test_fun__'' n(1:min(15,end))];';
+        '    fid=fopen(fullfile(p,[n e]),''w'');';
+        '    fprintf(fid,''%s\n'',...';
+        '        ''#include "mex.h"'',...';
+        '        ''void mexFunction(int nlhs, mxArray *plhs[],'',...';
+        '        ''  int nrhs, const mxArray *prhs[]) {'',...';
+        '        ''    plhs[0]=mxCreateString("compiler works");'',...';
+        '        ''    return;'',...';
+        '        ''}'');';
+        '    fclose(fid);';
+        'catch';
+        '    % If there is a write error in the temp dir, something is wrong.';
+        '    % Just try the normal check.';
+        '    cc=[];TryNormalCheck=true;return';
+        'end';
+        'try';
+        '    current=cd(p);';
+        'catch';
+        '    % If the cd fails, something is wrong here. Just try the normal check.';
+        '    cc=[];TryNormalCheck=true;return';
+        'end';
+        'try';
+        '    mex([n e]);';
+        '    cc=feval(str2func(n));';
+        '    clear(n); % Clear to remove file lock.';
+        '    cd(current);';
+        'catch';
+        '    % Either the mex or the feval failed. That means we can safely assume no';
+        '    % working compiler is present. The normal check should not be required.';
+        '    cd(current);';
+        '    cc=[];TryNormalCheck=false;return';
+        'end';
+        'end';
+        ''};
+    fid=fopen(fn,'wt');fprintf(fid,'%s\n',txt{:});fclose(fid);
+    fun_handle=str2func(fun_handle);
+
+    [tf_,ME_]=feval(fun_handle);
 end
 tf=tf_;ME=ME_;
+end
+function [p,ME]=CreatePathFolder__CheckMexCompilerExistence_persistent
+%Try creating a folder in either the tempdir or a persistent folder and try adding it to the path
+%(if it is not already in there). If the folder is not writable, the current folder will be used.
+try
+    ME=[];
+    p=fullfile(GetWritableFolder,'FileExchange','CheckMexCompilerExistence');
+    if isempty(strfind([path ';'],[p ';'])) %#ok<STREMP>
+        %This means f is not on the path.
+        if ~exist(p,'dir'),mkdir(p);end
+        addpath(p,'-end');
+    end
+catch
+    ME=struct('identifier','HJW:CheckMexCompilerExistence:PathFolderFail',...
+        'message','Creating a folder on the path to store compiled mex files failed.');
+end
 end
 function UTC_epoch_seconds=getUTC_c(allow_rethrow)
 %Use a C implementation, which requires write permission in a folder.
@@ -217,56 +413,94 @@ end
 function UTC_epoch_seconds=getUTC_cmd
 %Use a command line implementation.
 %Should return an empty array instead of an error if it fails.
-persistent WinVer
-if isempty(WinVer)
-    try
-        if ~ispc
-            error('trigger')
-        else
-            [status,str]=system('systeminfo'); %#ok<ASGLU>
-            ind1= 1+strfind(str,':');ind1=ind1(3);
-            ind2=-1+strfind(str,'.');ind2(ind2<ind1)=[];
-            WinVer=str2double(str(ind1:ind2(1)));
-        end
-    catch
-        WinVer=NaN;
-    end
-end
 try
-    if ispc
-        %The normal system call hangs on ML7.1 on XP. Since ML6.5 works fine on Windows 10, I'm
-        %making the assumption that the OS is the cause of the hang.
-        if isnan(WinVer) % str2double must have failed
-            error('trigger')
-        elseif WinVer<=5
-            pausetime=1;
-            fn1=[tempname,'.bat'];fn2=[tempname,'.txt'];
-            fid=fopen(fn1,'w');
-            fprintf(fid,'wmic os get LocalDateTime /value > "%s"\nexit',fn2);
-            fclose(fid);
-            system(['start /min "" cmd /c "' fn1 '"']);
-            pause(pausetime) % Wait for the system call to finish.
-            str=fileread(fn2);
-            try delete(fn1);catch,end
-            try delete(fn2);catch,end
-        else
-            pausetime=0;
-            %This returns YYYYMMDDHHMMSS.milliseconds+UTC_Offset_in_minutes
-            [status,str]=system('wmic os get LocalDateTime /value'); %#ok<ASGLU>
-        end
-        str=str(str>=43 & str<=57); % Strip irrelevant parts.
-        date=mat2cell(str(1:21),1,[4 2 2,2 2 2+1+6]);date=str2double(date);
-        date(5)=date(5)-str2double(str(22:end)); % Add offset.
-        date=num2cell(date);
-        UTC_epoch_seconds=(datenum(date{:})-datenum(1970,1,1))*24*60*60;
-        UTC_epoch_seconds=UTC_epoch_seconds+pausetime;
-    else
-        [status,str]=system('date +%s'); %#ok<ASGLU>
-        UTC_epoch_seconds=str2double(str);
-    end
+    call_type=getUTC_cmd_call_type;
+catch
+    warning('determination of call type failed')
+    UTC_epoch_seconds=[];return
+end
+
+try
+   switch call_type
+       case 'Unix'
+           UTC_epoch_seconds=getUTC_cmd_Unix;
+       case 'WMIC_sys'
+           UTC_epoch_seconds=getUTC_cmd_wmic_sys;
+       case 'WMIC_bat'
+           UTC_epoch_seconds=getUTC_cmd_wmic_bat;
+       case 'PS_get_date'
+           UTC_epoch_seconds=getUTC_cmd_PS_get_date;
+   end
 catch
     UTC_epoch_seconds=[];
 end
+end
+function call_type=getUTC_cmd_call_type
+persistent call_type_
+if isempty(call_type_)
+    if ~ispc
+        call_type_='Unix';
+    else
+        if WinVer<=5
+            %The normal system call hangs on ML7.1 on XP. Since ML6.5 works fine on Windows 10, I'm
+            %making the assumption that the OS is the cause of the hang.
+            call_type_='WMIC_bat';
+        elseif WinVer>=10
+            %The cmd WMIC interface has been deprecated and seems to have been removed from Windows
+            %10 21H1. On older W10 versions we can still use WMIC. Since every version of Windows
+            %will either have the WMIC or PowerShell, a PowerShell call seems like a good fallback.
+            [wmic_not_available,ignore]=system('wmic /?'); %#ok<ASGLU>
+            if wmic_not_available
+                call_type_='PS_get_date';
+            else
+                call_type_='WMIC_sys';
+            end
+        else
+            call_type_='WMIC_sys';
+        end
+    end
+end
+call_type=call_type_;
+end
+function UTC_epoch_seconds=getUTC_cmd_PS_get_date
+%Use Powershell to get the UTC time.
+[s,str]=system(['powershell $a=get-date;',...
+    '$a.ToUniversalTime().ToString(''yyyyMMddHHmmss'')']); %#ok<ASGLU>
+str(str<48 | str>57)='';%Remove trailing newline by keeping only digits.
+date=mat2cell(str,1,[4 2 2,2 2 2]);date=num2cell(str2double(date));
+UTC_epoch_seconds=(datenum(date{:})-datenum(1970,1,1))*24*60*60;
+end
+function UTC_epoch_seconds=getUTC_cmd_Unix
+[status,str]=system('date +%s'); %#ok<ASGLU>
+UTC_epoch_seconds=str2double(str);
+end
+function UTC_epoch_seconds=getUTC_cmd_wmic_bat
+%If a normal system call would hang, use a temporary bat file.
+pausetime=1;
+fn1=[tempname,'.bat'];fn2=[tempname,'.txt'];
+fid=fopen(fn1,'w');
+%This command returns YYYYMMDDHHMMSS.milliseconds+UTC_Offset_in_minutes
+fprintf(fid,'%%systemroot%%\\system32\\wbem\\wmic os get LocalDateTime /value > "%s"\r\nexit',fn2);
+fclose(fid);
+system(['start /min "" cmd /c "' fn1 '"']);
+then=now;%Store the current time to adjust for the pausetime and the function time.
+pause(pausetime) % Wait for the system call to finish.
+str=fileread(fn2);
+try delete(fn1);catch,end,try delete(fn2);catch,end % Delete temp files.
+UTC_epoch_seconds=getUTC_cmd_wmic_parse_str(str)+(now-then)*24*60*60;
+end
+function UTC_epoch_seconds=getUTC_cmd_wmic_sys
+%Use a direct system call (instead of a temporary bat file).
+[status,str]=system('wmic os get LocalDateTime /value'); %#ok<ASGLU>
+%This command returns YYYYMMDDHHMMSS.milliseconds+UTC_Offset_in_minutes
+UTC_epoch_seconds=getUTC_cmd_wmic_parse_str(str);
+end
+function UTC_epoch_seconds=getUTC_cmd_wmic_parse_str(str)
+str=str(str>=43 & str<=57); % Strip irrelevant parts.
+date=mat2cell(str(1:21),1,[4 2 2,2 2 2+1+6]);date=str2double(date);
+date(5)=date(5)-str2double(str(22:end)); % Add offset.
+date=num2cell(date);
+UTC_epoch_seconds=(datenum(date{:})-datenum(1970,1,1))*24*60*60;
 end
 function UTC_epoch_seconds=getUTC_web
 %Read the timestamp from a web server.
@@ -304,20 +538,35 @@ catch
 end
 end
 function [f,status]=GetWritableFolder(varargin)
-%Return a folder with write permission.
+%Return a folder with write permission
+%
 % If the output folder doesn't already exist, this function will attempt to create it. This
 % function should provide a reliable and repeatable location to write files.
 %
 % Syntax:
-% f=GetWritableFolder
-% [f,status]=GetWritableFolder
-% [__]=GetWritableFolder(Name,Value)
-% [__]=GetWritableFolder(optionstruct)
-% 
+%   f=GetWritableFolder
+%   [f,status]=GetWritableFolder
+%   [__]=GetWritableFolder(Name,Value)
+%   [__]=GetWritableFolder(options)
+%
+% Input/output arguments:
+% f:
+%   Char array with the full path to the writable folder. This does not contain a trailing filesep.
+% status:
+%   A scalar double ranging from 0 to 3. 0 denotes a failure to find a folder, 1 means the folder
+%   is in a folder close to the AddOn folder, 2 that it is a folder in the tempdir, 3 mean that the
+%   returned path is a folder in the current directory.
+% options:
+%   A struct with Name,Value parameters. Missing parameters are filled with the defaults listed
+%   below. Using incomplete parameter names or incorrect capitalization is allowed, as long as
+%   there is a unique match.
+%
 % Name,Value parameters:
-%    ForceStatus     : Retrieve the path corresponding to the status value (default=0;).
-%                      (0:auto-determine, 1:AddOn, 2:tempdir, 3:pwd)
-%    ErrorOnNotFound : Throw an error when failing to find a writeable folder (default=true;).
+%   ForceStatus:
+%      Retrieve the path corresponding to the status value. Using 0 allows an automatic
+%      determination of the location (default=0;).
+%    ErrorOnNotFound:
+%      Throw an error when failing to find a writeable folder (default=true;).
 %
 %/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%
 %|                                                                         |%
@@ -344,14 +593,14 @@ else
     [ForceStatus,ErrorOnNotFound,root_folder_list]=deal(options.ForceStatus,...
         options.ErrorOnNotFound,options.root_folder_list);
 end
-root_folder_list{end}=pwd;%Set this default here to avoid storing it in a persistent.
+root_folder_list{end}=pwd;% Set this default here to avoid storing it in a persistent.
 if ForceStatus
     status=ForceStatus;f=fullfile(root_folder_list{status},'PersistentFolder');
     try if ~exist(f,'dir'),mkdir(f);end,catch,end
     return
 end
 
-%Option 1: use a folder similar to the AddOn Manager.
+% Option 1: use a folder similar to the AddOn Manager.
 status=1;f=root_folder_list{status};
 try if ~exist(f,'dir'),mkdir(f);end,catch,end
 if ~TestFolderWritePermission(f)
@@ -365,12 +614,12 @@ if ~TestFolderWritePermission(f)
     end
 end
 
-%Add 'PersistentFolder' to whichever path was determined above.
+% Add 'PersistentFolder' to whichever path was determined above.
 f=fullfile(f,'PersistentFolder');
 try if ~exist(f,'dir'),mkdir(f);end,catch,end
 
 if ~TestFolderWritePermission(f)
-    %Apparently even the pwd isn't writable, so we will either return an error, or a fail state.
+    % Apparently even the pwd isn't writable, so we will either return an error, or a fail state.
     if ErrorOnNotFound
         error('HJW:GetWritableFolder:NoWritableFolder',...
             'This function was unable to find a folder with write permissions.')
@@ -380,14 +629,13 @@ if ~TestFolderWritePermission(f)
 end
 end
 function [success,options,ME]=GetWritableFolder_parse_inputs(varargin)
-%Parse the inputs of the GetWritableFolder function.
+%Parse the inputs of the GetWritableFolder function
 % This function returns a success flag, the parsed options, and an ME struct.
 % As input, the options should either be entered as a struct or as Name,Value pairs. Missing fields
 % are filled from the default.
 
-%Pre-assign outputs.
+% Pre-assign outputs.
 success=false;
-options=struct;
 ME=struct('identifier','','message','');
 
 persistent default
@@ -398,51 +646,28 @@ if isempty(default)
     default.root_folder_list={...
         GetPseudoAddonpath;
         fullfile(tempdir,'MATLAB');
-        ''};%Overwrite this last element with pwd when called.
+        ''};% Overwrite this last element with pwd when called.
 end
-%The required inputs are checked, so now we need to return the default options if there are no
-%further inputs.
+
 if nargin==2
     options=default;
     success=true;
     return
 end
 
-%Test the optional inputs.
-struct_input=       nargin   ==1 && isa(varargin{1},'struct');
-NameValue_input=mod(nargin,2)==0 && all(...
-    cellfun('isclass',varargin(1:2:end),'char'  ) | ...
-    cellfun('isclass',varargin(1:2:end),'string')   );
-if ~( struct_input || NameValue_input )
-    ME.message=['The input is expected to be either a struct, ',char(10),...
-        'or consist of Name,Value pairs.']; %#ok<CHARTEN>
-    ME.identifier='HJW:GetWritableFolder:incorrect_input_options';
-    return
-end
-if NameValue_input
-    %Convert the Name,Value to a struct.
-    for n=1:2:numel(varargin)
-        try
-            options.(varargin{n})=varargin{n+1};
-        catch
-            ME.message='Parsing of Name,Value pairs failed.';
-            ME.identifier='HJW:GetWritableFolder:incorrect_input_NameValue';
-            return
-        end
-    end
-else
-    options=varargin{1};
-end
-fn=fieldnames(options);
-for k=1:numel(fn)
-    curr_option=fn{k};
+% Actually parse the Name,Value pairs (or the struct).
+[options,replaced]=parse_NameValue(default,varargin{:});
+
+% Test the optional inputs.
+for k=1:numel(replaced)
+    curr_option=replaced{k};
     item=options.(curr_option);
     ME.identifier=['HJW:GetWritableFolder:incorrect_input_opt_' lower(curr_option)];
     switch curr_option
         case 'ForceStatus'
             try
                 if ~isa(default.root_folder_list{item},'char')
-                    %This ensures an error for item=[true false true]; as well.
+                    % This ensures an error for item=[true false true]; as well.
                     error('the indexing must have failed, trigger error')
                 end
             catch
@@ -462,14 +687,6 @@ for k=1:numel(fn)
             return
     end
 end
-
-%Fill any missing fields.
-fn=fieldnames(default);
-for k=1:numel(fn)
-    if ~isfield(options,fn(k))
-        options.(fn{k})=default.(fn{k});
-    end
-end
 success=true;ME=[];
 end
 function f=GetPseudoAddonpath
@@ -481,7 +698,7 @@ function f=GetPseudoAddonpath
 %     try s = settings;addonpath=s.matlab.addons.InstallationFolder.ActiveValue;end %#ok<TRYNC>
 %
 % However, this returns an inconsistent output:
-%     R2011a:         <pref doesn't exist>
+%     R2011a          <pref doesn't exist>
 %     R2015a Ubuntu  $HOME/Documents/MATLAB/Apps
 %            Windows %HOMEPATH%\MATLAB\Apps
 %     R2018a Ubuntu  $HOME/Documents/MATLAB/Add-Ons
@@ -497,141 +714,24 @@ else
     f=fullfile(home_dir,'Documents','MATLAB','Add-Ons');
 end
 end
-function tf=ifversion(test,Rxxxxab,Oct_flag,Oct_test,Oct_ver)
-%Determine if the current version satisfies a version restriction
-%
-% To keep the function fast, no input checking is done. This function returns a NaN if a release
-% name is used that is not in the dictionary.
+function [connected,timing]=isnetavl(use_HTML_test_only)
+%Check for an internet connection by pinging Google
 %
 % Syntax:
-% tf=ifversion(test,Rxxxxab)
-% tf=ifversion(test,Rxxxxab,'Octave',test_for_Octave,v_Octave)
+%   [connected,timing]=isnetavl(use_HTML_test_only)
 %
-% Output:
-% tf       - If the current version satisfies the test this returns true.
-%            This works similar to verLessThan.
-%
-% Inputs:
-% Rxxxxab - Char array containing a release description (e.g. 'R13', 'R14SP2' or 'R2019a') or the
-%           numeric version.
-% test    - Char array containing a logical test. The interpretation of this is equivalent to
-%           eval([current test Rxxxxab]). For examples, see below.
-%
-% Examples:
-% ifversion('>=','R2009a') returns true when run on R2009a or later
-% ifversion('<','R2016a') returns true when run on R2015b or older
-% ifversion('==','R2018a') returns true only when run on R2018a
-% ifversion('==',9.9) returns true only when run on R2020b
-% ifversion('<',0,'Octave','>',0) returns true only on Octave
-% ifversion('<',0,'Octave','>=',6) returns true only on Octave 6 and higher
-%
-% The conversion is based on a manual list and therefore needs to be updated manually, so it might
-% not be complete. Although it should be possible to load the list from Wikipedia, this is not
-% implemented.
-%
-%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%
-%|                                                                         |%
-%|  Version: 1.0.6                                                         |%
-%|  Date:    2021-03-11                                                    |%
-%|  Author:  H.J. Wisselink                                                |%
-%|  Licence: CC by-nc-sa 4.0 ( creativecommons.org/licenses/by-nc-sa/4.0 ) |%
-%|  Email = 'h_j_wisselink*alumnus_utwente_nl';                            |%
-%|  Real_email = regexprep(Email,{'*','_'},{'@','.'})                      |%
-%|                                                                         |%
-%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%
-%
-% Tested on several versions of Matlab (ML 6.5 and onward) and Octave (4.4.1 and onward), and on
-% multiple operating systems (Windows/Ubuntu/MacOS). For the full test matrix, see the HTML doc.
-% Compatibility considerations:
-% - This is expected to work on all releases.
-
-%The decimal of the version numbers are padded with a 0 to make sure v7.10 is larger than v7.9.
-%This does mean that any numeric version input needs to be adapted. multiply by 100 and round to
-%remove the potential for float rounding errors.
-%Store in persistent for fast recall (don't use getpref, as that is slower than generating the
-%variables and makes updating this function harder).
-persistent  v_num v_dict octave
-if isempty(v_num)
-    %test if Octave is used instead of Matlab
-    octave=exist('OCTAVE_VERSION', 'builtin');
-    
-    %get current version number
-    v_num=version;
-    ii=strfind(v_num,'.');if numel(ii)~=1,v_num(ii(2):end)='';ii=ii(1);end
-    v_num=[str2double(v_num(1:(ii-1))) str2double(v_num((ii+1):end))];
-    v_num=v_num(1)+v_num(2)/100;v_num=round(100*v_num);
-    
-    %get dictionary to use for ismember
-    v_dict={...
-        'R13' 605;'R13SP1' 605;'R13SP2' 605;'R14' 700;'R14SP1' 700;'R14SP2' 700;
-        'R14SP3' 701;'R2006a' 702;'R2006b' 703;'R2007a' 704;'R2007b' 705;
-        'R2008a' 706;'R2008b' 707;'R2009a' 708;'R2009b' 709;'R2010a' 710;
-        'R2010b' 711;'R2011a' 712;'R2011b' 713;'R2012a' 714;'R2012b' 800;
-        'R2013a' 801;'R2013b' 802;'R2014a' 803;'R2014b' 804;'R2015a' 805;
-        'R2015b' 806;'R2016a' 900;'R2016b' 901;'R2017a' 902;'R2017b' 903;
-        'R2018a' 904;'R2018b' 905;'R2019a' 906;'R2019b' 907;'R2020a' 908;
-        'R2020b' 909;'R2021a' 910};
-end
-
-if octave
-    if nargin==2
-        warning('HJW:ifversion:NoOctaveTest',...
-            ['No version test for Octave was provided.',char(10),...
-            'This function might return an unexpected outcome.']) %#ok<CHARTEN>
-        if isnumeric(Rxxxxab)
-            v=0.1*Rxxxxab+0.9*fix(Rxxxxab);v=round(100*v);
-        else
-            L=ismember(v_dict(:,1),Rxxxxab);
-            if sum(L)~=1
-                warning('HJW:ifversion:NotInDict',...
-                    'The requested version is not in the hard-coded list.')
-                tf=NaN;return
-            else
-                v=v_dict{L,2};
-            end
-        end
-    elseif nargin==4
-        % Undocumented shorthand syntax: skip the 'Octave' argument.
-        [test,v]=deal(Oct_flag,Oct_test);
-        % Convert 4.1 to 401.
-        v=0.1*v+0.9*fix(v);v=round(100*v);
-    else
-        [test,v]=deal(Oct_test,Oct_ver);
-        % Convert 4.1 to 401.
-        v=0.1*v+0.9*fix(v);v=round(100*v);
-    end
-else
-    % Convert R notation to numeric and convert 9.1 to 901.
-    if isnumeric(Rxxxxab)
-        v=0.1*Rxxxxab+0.9*fix(Rxxxxab);v=round(100*v);
-    else
-        L=ismember(v_dict(:,1),Rxxxxab);
-        if sum(L)~=1
-            warning('HJW:ifversion:NotInDict',...
-                'The requested version is not in the hard-coded list.')
-            tf=NaN;return
-        else
-            v=v_dict{L,2};
-        end
-    end
-end
-switch test
-    case '==', tf= v_num == v;
-    case '<' , tf= v_num <  v;
-    case '<=', tf= v_num <= v;
-    case '>' , tf= v_num >  v;
-    case '>=', tf= v_num >= v;
-end
-end
-function [connected,timing]=isnetavl(test_Matlab_instead_of_system)
-% Check for an internet connection by pinging Google.
-% Optional second output is the ping time (0 if not connected).
-%
-% Includes a fallback to HTML if usage of ping is not allowed. This increases the measured ping.
-%
-% If you provide an input, the HTML method will be used, which has the benefit of testing if Matlab
-% (or Octave) is able to connect to the internet. This might be relevant if there are proxy
-% settings or firewall rules specific to Matlab/Octave.
+% Input/output arguments:
+% connected:
+%   A logical denoting the connectivity. Note that this may return unexpected results if Matlab has
+%   separate proxy settings and/or if your DNS is having issues.
+% timing:
+%   This contains the ping time as a double and defaults to 0 if there is no connection.
+%   Note that this value will be larger than the true ping time if the HTML fallback is used.
+% use_HTML_test_only:
+%   If the input is convertible to true the HTML method will be used, which has the benefit of
+%   testing if Matlab (or Octave) is able to connect to the internet. This might be relevant if
+%   there are proxy settings or firewall rules specific to Matlab/Octave.
+%   Note that the ping value will be larger than the true value if the HTML fallback is used.
 %
 %/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%/%
 %|                                                                         |%
@@ -651,8 +751,8 @@ function [connected,timing]=isnetavl(test_Matlab_instead_of_system)
 % - If you have proxy/firewall settings specific to Matlab/Octave, make sure to use the HTML method
 %   by providing an input.
 
-if nargin==0,                                                        tf=false;
-else,[tf1,tf2]=test_if_scalar_logical(test_Matlab_instead_of_system);tf=tf1&&tf2;
+if nargin==0,                                             tf=false;
+else,[tf1,tf2]=test_if_scalar_logical(use_HTML_test_only);tf=tf1&&tf2;
 end
 if tf
     %(the timing is not reliable)
@@ -778,20 +878,27 @@ end
 tf=[];
 end
 function [mex_filename,fun_name]=mexname(fun_name)
-%Encode runtime version information in the function name and append the mex extension.
-%This can be useful if multiple versions of Matlab or Octave need to use the same folder to store
-%compiled functions, while not being compatible.
+%Encode runtime version information in the function name.
+% This can be useful if multiple versions of Matlab or Octave need to use the
+% same folder to store compiled functions, while not being compatible.
 %
-%This function replaces a syntax like mex_filename=[fun_name '.' mexext].
-%Syntax:
-% mex_filename=mexname(fun_name);
-%[mex_filename,updated_fun_name]=mexname(fun_name);
+% This function replaces a syntax like mex_filename=[fun_name '.' mexext].
+%
+% Syntax:
+%   mex_filename=mexname(fun_name);
+%   [mex_filename,updated_fun_name]=mexname(fun_name);
 persistent append
 if isempty(append)
-    v=version;ind=strfind(v,'.');v(ind(2):end)='';v=['v' strrep(v,'.','_')];
+    v=version;ind=[strfind(v,'.') numel(v)];
+    v=sprintf('%02d.%02d',str2double({...
+        v(1:(ind(1)-1)           ) ,...
+        v(  (ind(1)+1):(ind(2)-1)) }));
+    v=['v' strrep(v,'.','_')];
     if ~exist('OCTAVE_VERSION', 'builtin')
+        runtime='MATLAB';
         type=computer;
     else
+        runtime='OCTAVE';
         arch=computer;arch=arch(1:(min(strfind(arch,'-'))-1));
         if ispc
             if strcmp(arch,'x86_64')  ,type= 'win_64';
@@ -812,18 +919,81 @@ if isempty(append)
     end
     type=strrep(strrep(type,'.',''),'-','');
     append=cell(2,1);
-    append{1}=['_' v '_' type];
+    append{1}=['_' runtime '_' v '_' type];
     append{2}=[append{1} '.' mexext];
 end
 
 try %Test if fun_name is a valid name.
     if ~isvarname(fun_name),error('trigger catch block'),end
 catch
-    error('HJW:mexname:InvalidName','The provided input can''t be a function name')
+    error('HJW:mexname:InvalidName',...
+        'The provided input can''t be a function name')
 end
 
 mex_filename=[fun_name append{2}];
 fun_name=[fun_name append{1}];
+end
+function [opts,replaced]=parse_NameValue(default,varargin)
+%Match the Name,Value pairs to the default option, ignoring incomplete names and case.
+%
+%If this fails to find a match, this will throw an error with the offending name as the message.
+%
+%The second output is a cell containing the field names that have been set.
+
+opts=default;replaced={};
+if nargin==1,return,end
+
+%Unwind an input struct to Name,Value pairs.
+try
+    struct_input=numel(varargin)==1 && isa(varargin{1},'struct');
+    NameValue_input=mod(numel(varargin),2)==0 && all(...
+        cellfun('isclass',varargin(1:2:end),'char'  ) | ...
+        cellfun('isclass',varargin(1:2:end),'string')   );
+    if ~( struct_input || NameValue_input )
+        error('trigger')
+    end
+    if nargin==2
+        Names=fieldnames(varargin{1});
+        Values=struct2cell(varargin{1});
+    else
+        %Wrap in cellstr to account for strings (this also deals with the fun(Name=Value) syntax).
+        Names=cellstr(varargin(1:2:end));
+        Values=varargin(2:2:end);
+    end
+    if ~iscellstr(Names),error('trigger');end %#ok<ISCLSTR>
+catch
+    %If this block errors, that is either because a missing Value with the Name,Value syntax, or
+    %because the struct input is not a struct, or because an attempt was made to mix the two
+    %styles. In future versions of this functions an effort might be made to handle such cases.
+    error('parse_NameValue:MixedOrBadSyntax',...
+        'Optional inputs must be entered as Name,Value pairs or as struct.')
+end
+
+%Convert the real fieldnames to a char matrix.
+d_Names1=fieldnames(default);d_Names2=lower(d_Names1);
+len=cellfun('prodofsize',d_Names2);maxlen=max(len);
+for n=find(len<maxlen).' %Pad with spaces where needed
+    d_Names2{n}((end+1):maxlen)=' ';
+end
+d_Names2=vertcat(d_Names2{:});
+
+%Attempt to match the names.
+replaced=false(size(d_Names1));
+for n=1:numel(Names)
+    name=lower(Names{n});
+    tmp=d_Names2(:,1:min(end,numel(name)));
+    non_matching=numel(name)-sum(cumprod(double(tmp==repmat(name,size(tmp,1),1)),2),2);
+    match_idx=find(non_matching==0);
+    if numel(match_idx)~=1
+        error('parse_NameValue:NonUniqueMatch',Names{n})
+    end
+    
+    %Store the Value in the output struct.
+    opts.(d_Names1{match_idx})=Values{n};
+    
+    replaced(match_idx)=true;
+end
+replaced=d_Names1(replaced);
 end
 function [isLogical,val]=test_if_scalar_logical(val)
 %Test if the input is a scalar logical or convertible to it.
@@ -845,7 +1015,7 @@ if isempty(states)
         'enable','disable';...
         'enabled','disabled'};
     try
-        states(end+1,:)=eval('{"on","off"}');
+        states(end+1,:)=eval('{"on","off"}'); %#ok<EVLCS> 
     catch
     end
 end
@@ -905,4 +1075,32 @@ if nargin<2,ext='';else,if ~strcmp(ext(1),'.'),ext=['.' ext];end,end
 str=tempname;
 [p,f]=fileparts(str);
 str=fullfile(p,[StartFilenameWith f ext]);
+end
+function out=WinVer
+%This returns the main Windows version number (5 for XP, 6 for Vista, etc).
+%It will return an empty array for non-Windows or in case of errors.
+persistent persistent_val
+if ~ispc,out=[];return,end
+if isempty(persistent_val)
+    try
+        [status,str] = system('ver'); %#ok<ASGLU>
+        args={'[^0-9]*(\d*).*','$1','tokenize'};
+        v=version;v(min(find(v=='.')):end)='';pre_v7=str2double(v)<7; %#ok<MXFND> 
+        isOctave=exist('OCTAVE_VERSION','builtin')~=0;
+        if ~pre_v7 && ~isOctave
+            args(end)=[];%The 'tokenize' option became the default in R14 (v7).
+        end
+        persistent_val=str2double(regexprep(str,args{:}));
+    catch
+        try
+            [status,str]=system('systeminfo'); %#ok<ASGLU>
+            ind1= 1+strfind(str,':');ind1=ind1(3);
+            ind2=-1+strfind(str,'.');ind2(ind2<ind1)=[];
+            persistent_val=str2double(str(ind1:ind2(1)));
+        catch
+            persistent_val=[];
+        end
+    end
+end
+out=persistent_val;
 end
